@@ -3,68 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Grocery Recommendation System</title>
+    <title>IntelliGrocer · Smart Grocery Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <h1>🛒 IntelliGrocers</h1>
+    <div class="page-shell">
+        <header class="app-bar">
+            <div class="brand">
+                <span class="brand-mark">🛒</span>
+                <div>
+                    <p class="eyebrow">IntelliGrocer</p>
+                    <h1>Smart Pantry & Deals</h1>
+                </div>
             </div>
             <nav class="nav">
                 <a href="#home" class="nav-link active">Home</a>
                 <a href="#recommendations" class="nav-link">Recommendations</a>
                 <a href="#analytics" class="nav-link">Analytics</a>
             </nav>
+            <button id="getRecommendationsBtn" class="btn btn-pill btn-accent">Get AI Picks</button>
         </header>
 
-        <!-- Hero Section -->
-        <section id="home" class="hero">
-            <h2>Discover Smart Grocery Deals</h2>
-            <p>AI-powered recommendations tailored to your shopping needs</p>
-        </section>
-
-        <!-- User Preferences Form -->
-        <section class="preferences-section">
-            <h3>📋 Your Shopping Preferences</h3>
-            <p class="section-description">Help us personalize your recommendations by providing your shopping details</p>
-            
-            <form id="preferencesForm" class="preferences-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="monthlyBudget">Monthly Grocery Budget (₹) <span class="required">*</span></label>
-                        <input type="number" id="monthlyBudget" name="monthlyBudget" 
-                               placeholder="e.g., 10000" min="0" step="100" required>
+        <main>
+            <section id="home" class="hero">
+                <div class="hero-copy">
+                    <div class="pill">Grocery intelligence · Live</div>
+                    <h2>Plan smarter, buy better, waste less.</h2>
+                    <p>Modular, AI-assisted grocery planning with live discounts, preference memory, and one-click analytics.</p>
+                    <div class="hero-actions">
+                        <button id="heroStartBtn" class="btn btn-primary">Start with preferences</button>
+                        <button id="heroBrowseBtn" class="btn btn-ghost">Browse products</button>
                     </div>
-
-                    <div class="form-group">
-                        <label for="householdSize">Household Size (Total members) <span class="required">*</span></label>
-                        <input type="number" id="householdSize" name="householdSize" 
-                               placeholder="e.g., 4" min="1" max="20" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="numAdults">Number of Adults <span class="required">*</span></label>
-                        <input type="number" id="numAdults" name="numAdults" 
-                               placeholder="e.g., 2" min="0" max="20" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="numChildren">Number of Children <span class="required">*</span></label>
-                        <input type="number" id="numChildren" name="numChildren" 
-                               placeholder="e.g., 2" min="0" max="20" required>
+                    <div class="hero-metrics">
+                        <div class="metric">
+                            <span class="metric-value" id="metricDeals">—</span>
+                            <span class="metric-label">Live deals</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value" id="metricCategories">—</span>
+                            <span class="metric-label">Categories</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value" id="metricSavings">₹0</span>
+                            <span class="metric-label">Avg. savings</span>
+                        </div>
                     </div>
                 </div>
+                <div class="hero-panel">
+                    <div class="panel-card">
+                        <p class="eyebrow">Preferences snapshot</p>
+                        <div class="chip-row" id="preferencesChips"></div>
+                        <p class="micro">Update your constraints to re-rank recommendations instantly.</p>
+                        <button class="btn btn-secondary" id="heroSyncPrefs">Sync preferences</button>
+                    </div>
+                    <div class="panel-card muted">
+                        <p class="eyebrow">Quick filters</p>
+                        <div class="chip-row">
+                            <button class="chip" data-quick-filter="high">High discount</button>
+                            <button class="chip" data-quick-filter="fresh">Fresh produce</button>
+                            <button class="chip" data-quick-filter="staples">Staples</button>
+                        </div>
+                        <p class="micro">Use quick filters or run full search below.</p>
+                    </div>
+                </div>
+            </section>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="currentSeason">Current Month / Season <span class="required">*</span></label>
+            <section class="section-card" id="featuresBar">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">AI Features</p>
+                        <h3>Smart recommendation modes</h3>
+                        <p class="lede">Select an AI mode to optimize your grocery recommendations.</p>
+                    </div>
+                </div>
+                <div class="features-carousel" id="featuresCarousel">
+                    <div class="feature-card" data-feature="quantity" title="Smart Quantity Optimization">
+                        <div class="feature-icon">📊</div>
+                        <h4>Quantity</h4>
+                        <p>Suggest optimal quantities within budget</p>
+                    </div>
+                    <div class="feature-card" data-feature="seasonal" title="Seasonal Grocery Intelligence">
+                        <div class="feature-icon">🌱</div>
+                        <h4>Seasonal</h4>
+                        <p>Recommend seasonal & cheaper items</p>
+                    </div>
+                    <div class="feature-card" data-feature="household" title="Household-Aware Recommendations">
+                        <div class="feature-icon">👨‍👩‍👧‍👦</div>
+                        <h4>Household</h4>
+                        <p>Adjust groceries by family size/type</p>
+                    </div>
+                    <div class="feature-card" data-feature="health" title="Health-Aware Budget Optimization">
+                        <div class="feature-icon">💪</div>
+                        <h4>Health</h4>
+                        <p>Balance budget + nutrition</p>
+                    </div>
+                    <div class="feature-card" data-feature="substitute" title="Substitute Product Recommendation">
+                        <div class="feature-icon">🔄</div>
+                        <h4>Substitute</h4>
+                        <p>Suggest cheaper alternatives</p>
+                    </div>
+                    <div class="feature-card" data-feature="savings" title="Savings Score & Monthly Ranking">
+                        <div class="feature-icon">🏆</div>
+                        <h4>Savings Score</h4>
+                        <p>Rank users/months by efficiency</p>
+                    </div>
+                    <div class="feature-card" data-feature="prediction" title="Next Month Budget Prediction">
+                        <div class="feature-icon">🔮</div>
+                        <h4>Prediction</h4>
+                        <p>Predict future grocery budget</p>
+                    </div>
+                    <div class="feature-card" data-feature="explain" title="Recommendation Explanation Engine">
+                        <div class="feature-icon">💡</div>
+                        <h4>Explain</h4>
+                        <p>Explain why items are recommended</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-card" id="preferencesSection">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Personalize</p>
+                        <h3>Shopping preferences</h3>
+                        <p class="lede">Tune your budget, household size, and cadence so the AI can score what matters.</p>
+                    </div>
+                    <button class="btn btn-ghost" type="reset" form="preferencesForm">Reset</button>
+                </div>
+
+                <form id="preferencesForm" class="grid two">
+                    <label class="field">
+                        <span>Monthly grocery budget (₹) <span class="required">*</span></span>
+                        <input type="number" id="monthlyBudget" name="monthlyBudget" placeholder="10000" min="0" step="100" required>
+                    </label>
+                    <label class="field">
+                        <span>Household size <span class="required">*</span></span>
+                        <input type="number" id="householdSize" name="householdSize" placeholder="4" min="1" max="20" required>
+                    </label>
+                    <label class="field">
+                        <span>Adults <span class="required">*</span></span>
+                        <input type="number" id="numAdults" name="numAdults" placeholder="2" min="0" max="20" required>
+                    </label>
+                    <label class="field">
+                        <span>Children <span class="required">*</span></span>
+                        <input type="number" id="numChildren" name="numChildren" placeholder="2" min="0" max="20" required>
+                    </label>
+                    <label class="field">
+                        <span>Current month / season <span class="required">*</span></span>
                         <select id="currentSeason" name="currentSeason" required>
-                            <option value="">Select Month/Season</option>
+                            <option value="">Select month</option>
                             <option value="January">January (Winter)</option>
                             <option value="February">February (Winter)</option>
                             <option value="March">March (Spring)</option>
@@ -78,141 +167,141 @@
                             <option value="November">November (Autumn)</option>
                             <option value="December">December (Winter)</option>
                         </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="purchaseFrequency">Purchase Frequency <span class="required">*</span></label>
+                    </label>
+                    <label class="field">
+                        <span>Purchase frequency <span class="required">*</span></span>
                         <select id="purchaseFrequency" name="purchaseFrequency" required>
-                            <option value="">Select Frequency</option>
+                            <option value="">Select frequency</option>
                             <option value="daily">Daily</option>
                             <option value="weekly">Weekly</option>
                             <option value="biweekly">Bi-weekly</option>
                             <option value="monthly">Monthly</option>
                         </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label for="pastSpend">Past Monthly Grocery Spend (last 2-3 months average in ₹) <span class="required">*</span></label>
-                        <input type="number" id="pastSpend" name="pastSpend" 
-                               placeholder="e.g., 9500" min="0" step="100" required>
-                        <small class="form-hint">Enter average of your last 2-3 months' grocery expenses</small>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label for="essentialPriority">Essential Item Priority</label>
-                        <div class="radio-group">
-                            <label class="radio-label">
+                    </label>
+                    <label class="field span-2">
+                        <span>Past monthly grocery spend (₹, avg of last 2-3 months) <span class="required">*</span></span>
+                        <input type="number" id="pastSpend" name="pastSpend" placeholder="9500" min="0" step="100" required>
+                        <small class="micro">We use this to calibrate savings suggestions.</small>
+                    </label>
+                    <div class="field span-2">
+                        <span>Essential item priority</span>
+                        <div class="inline-options">
+                            <label class="chip-input">
                                 <input type="radio" name="essentialPriority" value="yes" checked>
-                                <span>Yes - Prioritize essential items in recommendations</span>
+                                <span>Prioritize essentials</span>
                             </label>
-                            <label class="radio-label">
+                            <label class="chip-input">
                                 <input type="radio" name="essentialPriority" value="no">
-                                <span>No - Show all product recommendations</span>
+                                <span>Show all deals</span>
                             </label>
                         </div>
                     </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary btn-large">
-                        💾 Save Preferences & Get Personalized Recommendations
-                    </button>
-                    <button type="reset" class="btn btn-outline">Clear Form</button>
-                </div>
-            </form>
-        </section>
-
-        <!-- Search and Filter Section -->
-        <section class="search-section">
-            <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="Search for products...">
-                <button id="searchBtn" class="btn btn-primary">Search</button>
-            </div>
-            
-            <div class="filter-container">
-                <select id="categoryFilter" class="filter-select">
-                    <option value="">All Categories</option>
-                </select>
-                
-                <select id="discountFilter" class="filter-select">
-                    <option value="">All Discounts</option>
-                    <option value="high">High Discount (>40%)</option>
-                    <option value="medium">Medium Discount (20-40%)</option>
-                    <option value="low">Low Discount (<20%)</option>
-                </select>
-
-                <select id="priceSort" class="filter-select">
-                    <option value="">Sort by Price</option>
-                    <option value="low-high">Price: Low to High</option>
-                    <option value="high-low">Price: High to Low</option>
-                </select>
-
-                <button id="getRecommendationsBtn" class="btn btn-secondary">Get AI Recommendations</button>
-            </div>
-        </section>
-
-        <!-- Loading Spinner -->
-        <div id="loadingSpinner" class="loading-spinner hidden">
-            <div class="spinner"></div>
-            <p>Loading products...</p>
-        </div>
-
-        <!-- Recommendations Section -->
-        <section id="recommendations" class="recommendations-section">
-            <h3>Recommended Products</h3>
-            <div id="recommendationsGrid" class="products-grid">
-                <!-- Products will be dynamically loaded here -->
-            </div>
-        </section>
-
-        <!-- Analytics Section -->
-        <section id="analytics" class="analytics-section hidden">
-            <h3>Shopping Analytics</h3>
-            <div class="analytics-container">
-                <div class="analytics-card">
-                    <h4>Category Distribution</h4>
-                    <div id="categoryChart" class="chart-container">
-                        <img id="categoryChartImg" src="" alt="Category Distribution Chart" class="chart-image">
+                    <div class="actions span-2">
+                        <button type="submit" class="btn btn-primary">Save & personalize</button>
+                        <button type="button" class="btn btn-secondary" id="quickRecommend">Personalize + recommend</button>
                     </div>
-                </div>
-                
-                <div class="analytics-card">
-                    <h4>Price vs Discount Analysis</h4>
-                    <div id="priceDiscountChart" class="chart-container">
-                        <img id="priceDiscountChartImg" src="" alt="Price vs Discount Chart" class="chart-image">
+                </form>
+            </section>
+
+            <section class="section-card" id="discovery">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Discover</p>
+                        <h3>Search, filter, and sort</h3>
+                        <p class="lede">Fine-tune categories, discounts, and price order before requesting AI picks.</p>
                     </div>
                 </div>
 
-                <div class="analytics-card">
-                    <h4>Top Deals</h4>
-                    <div id="topDealsChart" class="chart-container">
-                        <img id="topDealsChartImg" src="" alt="Top Deals Chart" class="chart-image">
+                <div class="search-bar">
+                    <div class="input-group">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search for rice, oil, vegetables, snacks...">
+                        <button id="searchBtn" class="btn btn-primary">Search</button>
+                    </div>
+                    <div class="filters">
+                        <label class="field compact">
+                            <span>Category</span>
+                            <select id="categoryFilter" class="filter-select">
+                                <option value="">All</option>
+                            </select>
+                        </label>
+                        <label class="field compact">
+                            <span>Discount</span>
+                            <select id="discountFilter" class="filter-select">
+                                <option value="">Any</option>
+                                <option value="high">High (&gt;40%)</option>
+                                <option value="medium">Medium (20-40%)</option>
+                                <option value="low">Low (&lt;20%)</option>
+                            </select>
+                        </label>
+                        <label class="field compact">
+                            <span>Price</span>
+                            <select id="priceSort" class="filter-select">
+                                <option value="">Sort by</option>
+                                <option value="low-high">Low to high</option>
+                                <option value="high-low">High to low</option>
+                            </select>
+                        </label>
                     </div>
                 </div>
-            </div>
-            <button id="generateChartsBtn" class="btn btn-primary">Generate Analytics</button>
-        </section>
+            </section>
 
-        <!-- Product Details Modal -->
-        <div id="productModal" class="modal hidden">
+            <div id="loadingSpinner" class="loading is-hidden">
+                <div class="spinner"></div>
+                <p>Loading products and deals...</p>
+            </div>
+
+            <section id="recommendations" class="section-card">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Recommended</p>
+                        <h3>Products tailored to you</h3>
+                        <p class="lede">Tap any card to view savings details and rationale.</p>
+                    </div>
+                    <button class="btn btn-ghost" id="refreshProducts">Refresh data</button>
+                </div>
+                <div id="recommendationsGrid" class="products-grid"></div>
+            </section>
+
+            <section id="analytics" class="section-card is-hidden">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Insights</p>
+                        <h3>Shopping analytics</h3>
+                        <p class="lede">Visualize category coverage, price vs discount, and top deals.</p>
+                    </div>
+                    <button id="generateChartsBtn" class="btn btn-primary">Generate analytics</button>
+                </div>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h4>Category distribution</h4>
+                        <div class="chart-frame"><img id="categoryChartImg" alt="Category distribution chart"></div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Price vs discount</h4>
+                        <div class="chart-frame"><img id="priceDiscountChartImg" alt="Price vs discount chart"></div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Top deals</h4>
+                        <div class="chart-frame"><img id="topDealsChartImg" alt="Top deals chart"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div id="productModal" class="modal is-hidden">
             <div class="modal-content">
-                <span class="close">&times;</span>
-                <div id="modalBody">
-                    <!-- Product details will be loaded here -->
-                </div>
+                <button class="close" id="modalClose" aria-label="Close">✕</button>
+                <div id="modalBody"></div>
             </div>
         </div>
 
-        <!-- Footer -->
+        <div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
         <footer class="footer">
-            <p>&copy; 2026 Smart Grocery Recommendation System. All rights reserved.</p>
+            <p>&copy; 2026 IntelliGrocer. Crafted for smart, waste-free kitchens.</p>
         </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="./js/main.js"></script>
 </body>
 </html>

@@ -4,11 +4,13 @@ A web-based smart grocery recommendation system with AI-powered product recommen
 
 ## Tech Stack
 
-- **Frontend**: HTML, CSS
-- **Client-side Logic**: JavaScript (Vanilla JS, no Node.js)
+- **Frontend**: HTML5, CSS3
+- **Client-side Logic**: ES6 Vanilla JavaScript (Modular JS architecture)
 - **Backend & ML**: Python (Flask)
+- **Data Processing**: Pandas, NumPy, Scikit-learn
 - **Data Storage**: CSV
 - **Visualization**: Matplotlib, Seaborn
+- **API Communication**: Fetch API (REST)
 
 ## Features
 
@@ -21,6 +23,15 @@ A web-based smart grocery recommendation system with AI-powered product recommen
   - Purchase frequency
   - Essential item priorities
 - 🎯 **AI Recommendations**: Get personalized product recommendations based on value scores and user preferences
+- 🧠 **Smart AI Modes**: 8 intelligent recommendation modes:
+  - 📊 **Smart Quantity Optimization**: Suggest optimal quantities within budget
+  - 🌱 **Seasonal Grocery Intelligence**: Recommend seasonal & cheaper items
+  - 👨‍👩‍👧‍👦 **Household-Aware Recommendations**: Adjust groceries based on family size/type
+  - 💪 **Health-Aware Budget Optimization**: Balance budget + nutrition
+  - 🔄 **Substitute Product Recommendation**: Suggest cheaper alternatives
+  - 🏆 **Savings Score & Monthly Ranking**: Rank users/months by savings efficiency
+  - 🔮 **Next Month Budget Prediction**: Predict future grocery budget
+  - 💡 **Recommendation Explanation Engine**: Explain why items are recommended
 - 📊 **Analytics Dashboard**: Visualize category distribution, price vs discount analysis, and top deals
 - 🏷️ **Advanced Filtering**: Filter by category, discount range, and sort by price
 - 💰 **Deal Highlighting**: Automatically highlights the best deals
@@ -53,14 +64,22 @@ http://localhost:5000
 ## File Structure
 
 ```
-Capstone Project/
-├── index.html              # Main HTML file
-├── styles.css              # Stylesheet
-├── script.js               # Client-side JavaScript
-├── app.py                  # Python Flask backend server
-├── Grocery_data.csv        # Product data
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
+IntelliGrocer/
+├── index.html                    # Main HTML file
+├── styles.css                    # Global stylesheet
+├── grocery_dataset.csv           # Product data
+├── Smart grocery recommendation system.ipynb  # ML notebook
+├── requirements.txt              # Python dependencies
+├── README.md                     # This file
+├── js/
+│   ├── main.js                   # Application initialization & event handling
+│   ├── state.js                  # Application state management
+│   ├── ui.js                     # UI rendering functions
+│   ├── api.js                    # API communication layer
+│   ├── filters.js                # Product filtering logic
+│   ├── storage.js                # Local storage management
+│   └── utils.js                  # Utility functions
+└── (Python backend server files)
 ```
 
 ## Usage
@@ -81,9 +100,23 @@ Capstone Project/
 2. Filter by category, discount range, or sort by price
 3. Click on any product card to view detailed information
 
+### Select AI Mode
+1. Browse the **Smart Recommendation Modes** carousel at the top
+2. Click on any of the 8 AI modes to activate it:
+   - **Quantity**: Optimizes quantity suggestions within your budget
+   - **Seasonal**: Prioritizes seasonal and cheaper items
+   - **Household**: Tailors recommendations to your family composition
+   - **Health**: Balances nutritional value with budget constraints
+   - **Substitute**: Finds cheaper alternatives to premium items
+   - **Savings Score**: Ranks recommendations by efficiency
+   - **Prediction**: Forecasts your next month's budget needs
+   - **Explain**: Provides detailed reasoning for recommendations
+3. The active mode is highlighted with a checkmark ✓
+
 ### AI Recommendations
-1. Click the "Get AI Recommendations" button
+1. Click the "Get AI Picks" button or use the active AI mode
 2. The system analyzes products based on:
+   - Your selected AI mode and preferences
    - Your budget constraints
    - Household size and needs
    - Discount rates and prices
@@ -107,6 +140,23 @@ Capstone Project/
 - `GET /api/similar-products/<id>` - Get similar products
 - `GET /api/stats` - Get overall statistics
 
+## Architecture & Modules
+
+### Frontend Modules (JavaScript)
+- **main.js**: Application initialization, event binding, and workflow orchestration
+- **state.js**: Centralized state management for products, preferences, filters, and active AI mode
+- **ui.js**: All UI rendering functions including feature cards, product cards, and modals
+- **api.js**: RESTful API communication with the Flask backend
+- **filters.js**: Client-side product filtering and sorting logic
+- **storage.js**: Browser local storage for preference persistence
+- **utils.js**: Helper functions for formatting, calculations, and utilities
+
+### Backend Features
+The Flask backend provides intelligent recommendation engines:
+- Modular AI mode system supporting multiple recommendation strategies
+- Feature extraction and scoring for each mode
+- Dynamic recommendation ranking based on active mode
+
 ## Data Processing
 
 The system performs the following data processing:
@@ -119,7 +169,44 @@ The system performs the following data processing:
   - Essential vs non-essential item categorization
   - Purchase frequency patterns
   - Budget optimization (comparing current budget vs past spending)
+- **Mode-specific processing** for each AI recommendation strategy
 - Uses cosine similarity for finding similar products
+
+## AI Recommendation Modes
+
+The system includes 8 intelligent recommendation modes that can be toggled without reloading:
+
+1. **Smart Quantity Optimization** 📊
+   - Suggests optimal quantities within your monthly budget
+   - Considers household size and consumption patterns
+
+2. **Seasonal Grocery Intelligence** 🌱
+   - Prioritizes items that are in-season and typically cheaper
+   - Reduces overall spending by leveraging seasonal pricing
+
+3. **Household-Aware Recommendations** 👨‍👩‍👧‍👦
+   - Adjusts recommendations based on family composition
+   - Different suggestions for families with children vs. elderly members
+
+4. **Health-Aware Budget Optimization** 💪
+   - Balances nutritional value with budget constraints
+   - Prioritizes healthy options within your budget range
+
+5. **Substitute Product Recommendation** 🔄
+   - Suggests cheaper alternatives for premium items
+   - Maintains quality while reducing costs
+
+6. **Savings Score & Monthly Ranking** 🏆
+   - Ranks products and recommendations by efficiency
+   - Shows potential savings compared to alternatives
+
+7. **Next Month Budget Prediction** 🔮
+   - Predicts your next month's grocery budget based on patterns
+   - Helps with financial planning and budget allocation
+
+8. **Recommendation Explanation Engine** 💡
+   - Provides detailed reasoning for each recommendation
+   - Shows why specific items are suggested for your profile
 
 ## Troubleshooting
 
