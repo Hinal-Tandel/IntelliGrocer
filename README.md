@@ -6,7 +6,7 @@ A web-based smart grocery recommendation system with AI-powered product recommen
 
 - **Frontend**: HTML5, CSS3
 - **Client-side Logic**: ES6 Vanilla JavaScript (Modular JS architecture)
-- **Backend & ML**: Python (Flask)
+- **Backend & ML**: Python 
 - **Data Processing**: Pandas, NumPy, Scikit-learn
 - **Data Storage**: CSV
 - **Visualization**: Matplotlib, Seaborn
