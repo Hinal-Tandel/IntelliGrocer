@@ -1,5 +1,4 @@
 # Smart Grocery Recommendation System
-
 A web-based smart grocery recommendation system with AI-powered product recommendations and analytics.
 
 ## Tech Stack
@@ -276,6 +275,7 @@ The system includes 8 intelligent recommendation modes that can be toggled witho
 ## License
 
 This project is for educational purposes as part of a Capstone Project.
+
 
 
 
