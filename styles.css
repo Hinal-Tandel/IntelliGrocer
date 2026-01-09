@@ -1048,3 +1048,54 @@ body {
         font-size: 1.25rem;
     }
 }
+
+/* Items Summary Table Styles */
+#itemsSummaryTable {
+    font-size: 0.95rem;
+}
+
+#itemsSummaryTable thead th {
+    background: var(--surface-alt, #f8f9fa);
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+#itemsSummaryTable tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+#itemsSummaryTable tbody tr:hover {
+    background: var(--surface-alt, #f8f9fa);
+}
+
+.remove-item-btn {
+    transition: all 0.2s ease !important;
+}
+
+.remove-item-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(230, 57, 70, 0.3);
+}
+
+.remove-item-btn:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    #itemsSummaryTable {
+        font-size: 0.85rem;
+    }
+    
+    #itemsSummaryTable th,
+    #itemsSummaryTable td {
+        padding: 0.5rem !important;
+    }
+    
+    .remove-item-btn {
+        padding: 0.375rem 0.75rem !important;
+        font-size: 0.75rem !important;
+    }
+}

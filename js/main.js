@@ -1,11 +1,11 @@
 import { fetchProducts, fetchRecommendations, fetchAnalytics } from './api.js';
-import { state, setProducts, setFilteredProducts, setCategories, setPreferences, setFilters, getMetrics, setActiveFeature, getActiveFeature, setProductQuantity, getProductQuantity, setRecommendationSavings } from './state.js';
-import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards, renderRecommendationSummary } from './ui.js';
+import { state, setProducts, setFilteredProducts, setCategories, setPreferences, setFilters, getMetrics, setActiveFeature, getActiveFeature, setProductQuantity, getProductQuantity } from './state.js';
+import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards, renderRecommendationSummary, renderReports, showReportModal } from './ui.js';
 import { filterProducts } from './filters.js';
 import { savePreferences, loadPreferences, loadEssentialItems, addEssentialItem, removeEssentialItem } from './storage.js';
 import { scrollToAnchor, formatCurrency } from './utils.js';
-import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories, saveUserProfile, getUserProfile } from './firebase.js';
-import { generateBudgetRecommendations } from './recommendation.js';
+import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories, saveRecommendationReport, getRecommendationReports, getRecommendationReport, deleteRecommendationReport, getUserProfile } from './firebase.js';
+import { generateBudgetRecommendations, generateRecommendationReport, generateHTMLReport } from './recommendation.js';
 
 document.addEventListener('DOMContentLoaded', ensureAuthThenInit);
 
@@ -15,18 +15,6 @@ function ensureAuthThenInit() {
             window.location.href = 'login.html';
         } else {
             window.CURRENT_USER = user;
-            // Persist basic profile information to Firestore
-            try {
-                const stored = localStorage.getItem('currentUser');
-                const parsed = stored ? JSON.parse(stored) : null;
-                const profile = {
-                    email: user.email || '',
-                    displayName: user.displayName || parsed?.firstName || '',
-                };
-                saveUserProfile(user.uid, profile);
-            } catch (e) {
-                console.error('Failed to save user profile', e);
-            }
             initApp();
         }
     });
@@ -38,7 +26,6 @@ async function initApp() {
     hydratePreferencesFromStorage();
     renderFeatureCards();
     renderEssentialItems();
-    await fetchAndRenderProfile();
     
     // Only load products if user is authenticated
     const currentUser = localStorage.getItem('currentUser');
@@ -57,14 +44,13 @@ function checkAuthentication() {
     const userName = document.getElementById('userName');
     const welcomeSection = document.getElementById('welcomeSection');
     const authRequiredElements = document.querySelectorAll('.auth-required');
-    const profileSection = document.getElementById('profile');
     
     if (currentUser) {
         // User is logged in
         const user = JSON.parse(currentUser);
         if (loginBtn) loginBtn.style.display = 'none';
         if (userMenu) userMenu.style.display = 'flex';
-        if (userName) userName.textContent = `Welcome, ${user.firstName || user.displayName || user.email}`;
+        if (userName) userName.textContent = `Welcome, ${user.firstName || user.email}`;
         if (welcomeSection) welcomeSection.style.display = 'none';
         
         // Show authenticated content
@@ -83,7 +69,6 @@ function checkAuthentication() {
         authRequiredElements.forEach(el => {
             el.style.display = 'none';
         });
-        if (profileSection) profileSection.style.display = 'none';
     }
 }
 
@@ -210,6 +195,37 @@ function bindEvents() {
     // Essential items handlers
     document.getElementById('addEssentialItemBtn')?.addEventListener('click', handleAddEssentialItem);
     document.getElementById('essentialItemSelect')?.addEventListener('change', handleEssentialItemSelectChange);
+
+    // Report generation and profile handlers
+    document.getElementById('generateReportBtn')?.addEventListener('click', handleGenerateReport);
+    
+    // Report card click delegation
+    document.getElementById('reportsContainer')?.addEventListener('click', async (e) => {
+        const viewBtn = e.target.closest('.view-report-btn');
+        const downloadBtn = e.target.closest('.download-report-btn');
+        const deleteBtn = e.target.closest('.delete-report-btn');
+        
+        if (viewBtn) {
+            const reportId = viewBtn.getAttribute('data-report-id');
+            await handleViewReport(reportId);
+        } else if (downloadBtn) {
+            const reportId = downloadBtn.getAttribute('data-report-id');
+            const format = downloadBtn.getAttribute('data-format') || 'html';
+            await handleDownloadReport(reportId, format);
+        } else if (deleteBtn) {
+            const reportId = deleteBtn.getAttribute('data-report-id');
+            await handleDeleteReport(reportId);
+        }
+    });
+    
+    // Items summary remove button handler
+    document.getElementById('itemsSummaryBody')?.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.remove-item-btn');
+        if (removeBtn) {
+            const index = Number(removeBtn.getAttribute('data-product-index'));
+            handleRemoveItem(index);
+        }
+    });
 }
 
 function handleProductGridClick(e) {
@@ -240,6 +256,16 @@ function handleProductGridClick(e) {
 function updateProductQuantity(index, quantity) {
     const qty = setProductQuantity(index, quantity);
     
+    // Check if budget is exceeded
+    if (state.preferences?.monthlyBudget) {
+        const totalCost = calculateTotalCostWithQuantities();
+        if (totalCost > state.preferences.monthlyBudget) {
+            showToast(`Budget exceeded! Total: ${formatCurrency(totalCost)}, Budget: ${formatCurrency(state.preferences.monthlyBudget)}`, 'error');
+        }
+        // Update budget summary display
+        updateBudgetSummary();
+    }
+    
     // Update the input field
     const input = document.querySelector(`.qty-input[data-product-index="${index}"]`);
     if (input) input.value = qty;
@@ -251,6 +277,144 @@ function updateProductQuantity(index, quantity) {
         const total = (product.discounted_price || 0) * qty;
         totalSpan.textContent = formatCurrency(total);
     }
+}
+
+function calculateTotalCostWithQuantities() {
+    let total = 0;
+    state.filteredProducts.forEach((product, index) => {
+        const qty = getProductQuantity(index);
+        const price = parseFloat(product.discounted_price) || 0;
+        total += price * qty;
+    });
+    return total;
+}
+
+function updateBudgetSummary() {
+    const budgetSummary = document.getElementById('budgetSummary');
+    if (!budgetSummary || !state.preferences?.monthlyBudget) return;
+    
+    const totalCost = calculateTotalCostWithQuantities();
+    const budget = state.preferences.monthlyBudget;
+    const remaining = budget - totalCost;
+    const isOverBudget = remaining < 0;
+    
+    // Show the summary
+    budgetSummary.style.display = 'block';
+    
+    // Update status text
+    const statusText = document.getElementById('budgetStatusText');
+    if (statusText) {
+        if (isOverBudget) {
+            statusText.textContent = '⚠️ Over Budget';
+            statusText.style.color = 'var(--danger, #e63946)';
+        } else {
+            const percentage = ((totalCost / budget) * 100).toFixed(1);
+            statusText.textContent = `✓ Within Budget (${percentage}% used)`;
+            statusText.style.color = 'var(--success, #06d6a0)';
+        }
+    }
+    
+    // Update cost displays
+    const totalCostEl = document.getElementById('budgetTotalCost');
+    if (totalCostEl) {
+        totalCostEl.textContent = formatCurrency(totalCost);
+        totalCostEl.style.color = isOverBudget ? 'var(--danger, #e63946)' : 'var(--accent)';
+    }
+    
+    const budgetLimitEl = document.getElementById('budgetLimit');
+    if (budgetLimitEl) {
+        budgetLimitEl.textContent = formatCurrency(budget);
+    }
+    
+    const remainingEl = document.getElementById('budgetRemaining');
+    if (remainingEl) {
+        remainingEl.textContent = formatCurrency(Math.abs(remaining));
+        remainingEl.style.color = isOverBudget ? 'var(--danger, #e63946)' : 'var(--success, #06d6a0)';
+        
+        // Update label if over budget
+        const label = remainingEl.previousElementSibling;
+        if (label) {
+            label.textContent = isOverBudget ? 'Over by' : 'Remaining';
+        }
+    }
+    
+    // Also update items summary
+    updateItemsSummary();
+}
+
+function updateItemsSummary() {
+    const summarySection = document.getElementById('itemsSummary');
+    const summaryBody = document.getElementById('itemsSummaryBody');
+    
+    if (!summaryBody || !state.filteredProducts || state.filteredProducts.length === 0) {
+        if (summarySection) summarySection.style.display = 'none';
+        return;
+    }
+    
+    // Show summary section
+    if (summarySection) summarySection.style.display = 'block';
+    
+    let totalCost = 0;
+    let totalItems = 0;
+    
+    const rows = state.filteredProducts.map((product, index) => {
+        const qty = getProductQuantity(index);
+        const price = parseFloat(product.discounted_price) || 0;
+        const itemTotal = price * qty;
+        totalCost += itemTotal;
+        totalItems += qty;
+        
+        return `
+            <tr style="border-bottom: 1px solid var(--border);" data-product-index="${index}">
+                <td style="padding: 0.75rem;">
+                    <strong>${product.name}</strong>
+                    <br><small style="opacity: 0.7;">${product.quantity || ''}</small>
+                </td>
+                <td style="padding: 0.75rem;">${product.category || 'General'}</td>
+                <td style="padding: 0.75rem; text-align: center;">
+                    <span style="display: inline-block; padding: 0.25rem 0.75rem; background: var(--accent-alpha); border-radius: 12px; font-weight: 600;">${qty}</span>
+                </td>
+                <td style="padding: 0.75rem; text-align: right;">${formatCurrency(price)}</td>
+                <td style="padding: 0.75rem; text-align: right; font-weight: 600;">${formatCurrency(itemTotal)}</td>
+                <td style="padding: 0.75rem; text-align: center;">
+                    <button class="remove-item-btn" data-product-index="${index}" 
+                        style="padding: 0.5rem 1rem; border: 1px solid var(--danger, #e63946); background: transparent; color: var(--danger, #e63946); border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 600; transition: all 0.2s;"
+                        onmouseover="this.style.background='var(--danger, #e63946)'; this.style.color='white';"
+                        onmouseout="this.style.background='transparent'; this.style.color='var(--danger, #e63946)';">
+                        🗑️ Remove
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    summaryBody.innerHTML = rows;
+    
+    // Update totals
+    const itemCountEl = document.getElementById('summaryItemCount');
+    if (itemCountEl) itemCountEl.textContent = totalItems;
+    
+    const totalCostEl = document.getElementById('summaryTotalCost');
+    if (totalCostEl) totalCostEl.textContent = formatCurrency(totalCost);
+}
+
+function handleRemoveItem(index) {
+    if (!state.filteredProducts || index < 0 || index >= state.filteredProducts.length) return;
+    
+    const product = state.filteredProducts[index];
+    const productName = product.name;
+    
+    // Remove from filtered products
+    state.filteredProducts.splice(index, 1);
+    
+    // Re-render the recommendations grid
+    renderProducts(state.filteredProducts, 'recommendationsGrid');
+    
+    // Update summaries
+    updateBudgetSummary();
+    updateItemsSummary();
+    
+    showToast(`${productName} removed from recommendations`, 'info');
 }
 
 async function loadProductsFlow() {
@@ -308,9 +472,11 @@ async function handleRecommendations() {
         // Use the budget-based recommendation algorithm
         const recommendationResult = generateBudgetRecommendations(state.products, state.preferences);
         
+        // Store recommendation result in state for report generation
+        state.lastRecommendationResult = recommendationResult;
+        
         // Update state with recommended products
         setFilteredProducts(recommendationResult.products);
-        setRecommendationSavings(recommendationResult.totalSavings);
         
         // Render products and summary
         renderProducts(recommendationResult.products, 'recommendationsGrid');
@@ -328,6 +494,11 @@ async function handleRecommendations() {
         
         // Navigate to recommendations section
         navigateToSection('#recommendations');
+        
+        // Update budget and items summary
+        updateBudgetSummary();
+        updateItemsSummary();
+        
         showToast(`${recommendationResult.metrics.totalProducts} products recommended within budget!`, 'success');
     } catch (error) {
         showToast(error.message || 'Could not generate recommendations.', 'error');
@@ -442,7 +613,7 @@ function handleLogout() {
     }, 1000);
 }
 
-function navigateToSection(sectionId) {
+async function navigateToSection(sectionId) {
     // Hide all main sections
     const sections = ['home', 'personalize', 'featuresBar', 'recommendations', 'analytics', 'search', 'profile'];
     sections.forEach(id => {
@@ -490,59 +661,14 @@ function navigateToSection(sectionId) {
                 showSearchResultsHeader(true);
             }
         }
-
-        // Profile section visibility: show only on home and profile pages
-        const profileSection = document.getElementById('profile');
-        if (profileSection) {
-            if (targetSection === 'home' || targetSection === 'profile') {
-                profileSection.style.display = '';
-                // Refresh profile data upon showing
-                fetchAndRenderProfile();
-            } else {
-                profileSection.style.display = 'none';
-            }
+        
+        // Special handling for profile - load reports
+        if (targetSection === 'profile') {
+            await loadProfileSection();
         }
         
         // Scroll to section
         sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-}
-
-async function fetchAndRenderProfile() {
-    try {
-        const uid = window.CURRENT_USER?.uid;
-        if (!uid) return;
-        // Try Firestore profile first; fallback to auth object/localStorage
-        let profile = await getUserProfile(uid);
-        if (!profile) {
-            const stored = localStorage.getItem('currentUser');
-            if (stored) {
-                const user = JSON.parse(stored);
-                profile = { displayName: user.firstName || user.displayName || '', email: user.email || '' };
-            } else if (window.CURRENT_USER) {
-                profile = { displayName: window.CURRENT_USER.displayName || '', email: window.CURRENT_USER.email || '' };
-            }
-        }
-
-        // Derive a friendly name if displayName is missing
-        const deriveName = (p) => {
-            const raw = p?.displayName || '';
-            if (raw && raw.trim()) return raw;
-            const email = p?.email || '';
-            const base = email.includes('@') ? email.split('@')[0] : '';
-            // Title-case the base (split on non-alphanumerics)
-            const parts = base.split(/[^a-zA-Z0-9]+/).filter(Boolean);
-            const title = parts.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
-            return title || '';
-        };
-
-        const friendlyName = deriveName(profile);
-        const nameEl = document.getElementById('profileName');
-        const emailEl = document.getElementById('profileEmail');
-        if (nameEl) nameEl.textContent = friendlyName || '—';
-        if (emailEl) emailEl.textContent = profile?.email || '—';
-    } catch (e) {
-        console.error('Failed to fetch/render profile info', e);
     }
 }
 
@@ -710,3 +836,188 @@ function showSearchResultsHeader(show) {
 
 // Make remove handler available globally for onclick
 window.removeEssentialItemHandler = handleRemoveEssentialItem;
+
+async function loadProfileSection() {
+    if (!window.CURRENT_USER?.uid) {
+        showToast('Please log in to view your profile', 'error');
+        return;
+    }
+
+    showLoading(true);
+    try {
+        // Load user profile info
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        document.getElementById('profileName').textContent = currentUser?.firstName || currentUser?.email || 'User';
+        document.getElementById('profileEmail').textContent = currentUser?.email || '—';
+
+        // Load reports
+        const reports = await getRecommendationReports(window.CURRENT_USER.uid);
+        document.getElementById('profileReportCount').textContent = reports.length;
+        renderReports(reports);
+    } catch (error) {
+        console.error('Failed to load profile:', error);
+        showToast('Failed to load profile data', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function handleGenerateReport() {
+    if (!window.CURRENT_USER?.uid) {
+        showToast('Please log in to generate reports', 'error');
+        return;
+    }
+
+    if (!state.preferences) {
+        showToast('Please save your preferences first', 'error');
+        navigateToSection('#personalize');
+        return;
+    }
+
+    if (!state.lastRecommendationResult || !state.lastRecommendationResult.products || state.lastRecommendationResult.products.length === 0) {
+        showToast('Please generate recommendations first', 'error');
+        navigateToSection('#personalize');
+        return;
+    }
+
+    showLoading(true);
+    try {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const userName = currentUser?.firstName || currentUser?.email || 'User';
+
+        // Use the stored recommendation result directly
+        const recommendationResult = state.lastRecommendationResult;
+        
+        // Add selected quantities to products
+        const productsWithQuantities = recommendationResult.products.map((product, index) => ({
+            ...product,
+            selectedQuantity: getProductQuantity(index)
+        }));
+
+        // Update recommendation result with quantities
+        const updatedRecommendationResult = {
+            ...recommendationResult,
+            products: productsWithQuantities
+        };
+
+        const report = generateRecommendationReport(updatedRecommendationResult, state.preferences, userName);
+        await saveRecommendationReport(window.CURRENT_USER.uid, report);
+
+        showToast('Report generated successfully!', 'success');
+        await loadProfileSection();
+    } catch (error) {
+        console.error('Failed to generate report:', error);
+        showToast(`Failed to generate report: ${error.message}`, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function handleViewReport(reportId) {
+    if (!window.CURRENT_USER?.uid) return;
+
+    showLoading(true);
+    try {
+        const report = await getRecommendationReport(window.CURRENT_USER.uid, reportId);
+        if (report) {
+            showReportModal(report);
+        } else {
+            showToast('Report not found', 'error');
+        }
+    } catch (error) {
+        console.error('Failed to load report:', error);
+        showToast('Failed to load report', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function handleDownloadReport(reportId, format = 'html') {
+    if (!window.CURRENT_USER?.uid) return;
+
+    showLoading(true);
+    try {
+        const report = await getRecommendationReport(window.CURRENT_USER.uid, reportId);
+        if (!report) {
+            showToast('Report not found', 'error');
+            return;
+        }
+
+        const htmlContent = generateHTMLReport(report);
+
+        if (format === 'pdf') {
+            // Open in new window for printing to PDF
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        } else if (format === 'word') {
+            // Generate Word document using MHTML
+            generateWordReport(htmlContent, report);
+        } else {
+            // Download as HTML
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `IntelliGrocer_Report_${new Date().toISOString().split('T')[0]}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        showToast(`Report downloaded as ${format.toUpperCase()}`, 'success');
+    } catch (error) {
+        console.error('Failed to download report:', error);
+        showToast('Failed to download report', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function generateWordReport(htmlContent, report) {
+    // Create MHTML format for Word
+    const mhtml = `MIME-Version: 1.0
+Content-Type: multipart/related; boundary="BOUNDARY"
+
+--BOUNDARY
+Content-Type: text/html; charset="utf-8"
+Content-Location: report.html
+
+${htmlContent}
+
+--BOUNDARY--`;
+
+    const blob = new Blob([mhtml], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `IntelliGrocer_Report_${new Date().toISOString().split('T')[0]}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+async function handleDeleteReport(reportId) {
+    if (!window.CURRENT_USER?.uid) return;
+
+    if (!confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+        return;
+    }
+
+    showLoading(true);
+    try {
+        await deleteRecommendationReport(window.CURRENT_USER.uid, reportId);
+        showToast('Report deleted successfully', 'success');
+        await loadProfileSection();
+    } catch (error) {
+        console.error('Failed to delete report:', error);
+        showToast('Failed to delete report', 'error');
+    } finally {
+        showLoading(false);
+    }
+}

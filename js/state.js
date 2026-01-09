@@ -11,7 +11,8 @@ export const state = {
         sort: ''
     },
     activeFeature: 'quantity',
-    selectedQuantities: {} // Track selected quantities by product index
+    selectedQuantities: {}, // Track selected quantities by product index
+    lastRecommendationResult: null // Store last recommendation result for report generation
 };
 
 export function setProducts(products) {

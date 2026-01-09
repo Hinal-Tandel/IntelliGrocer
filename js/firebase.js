@@ -236,6 +236,11 @@ export async function getRecommendationReport(uid, reportId) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
+export async function deleteRecommendationReport(uid, reportId) {
+  const reportRef = doc(db, 'users', uid, 'reports', reportId);
+  await deleteDoc(reportRef);
+}
+
 export async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, 'users', uid));
   const data = snap.exists() ? snap.data() : {};

@@ -127,6 +127,9 @@ function createReportCard(report) {
                         </button>
                     </div>
                 </div>
+                <button class="btn btn-ghost btn-sm delete-report-btn" data-report-id="${report.id}" style="color: var(--danger, #e63946);">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     `;
