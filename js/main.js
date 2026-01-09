@@ -2,7 +2,7 @@ import { fetchProducts, fetchRecommendations, fetchAnalytics } from './api.js';
 import { state, setProducts, setFilteredProducts, setCategories, setPreferences, setFilters, getMetrics, setActiveFeature, getActiveFeature } from './state.js';
 import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards } from './ui.js';
 import { filterProducts } from './filters.js';
-import { savePreferences, loadPreferences } from './storage.js';
+import { savePreferences, loadPreferences, loadEssentialItems, addEssentialItem, removeEssentialItem } from './storage.js';
 import { scrollToAnchor } from './utils.js';
 import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations } from './firebase.js';
 
@@ -20,11 +20,55 @@ function ensureAuthThenInit() {
 }
 
 async function initApp() {
+    checkAuthentication();
     bindEvents();
     hydratePreferencesFromStorage();
     renderFeatureCards();
-    await loadProductsFlow();
-    applyFilters();
+    renderEssentialItems();
+    
+    // Only load products if user is authenticated
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+        await loadProductsFlow();
+        applyFilters();
+        // Initialize by showing home section
+        navigateToSection('#home');
+    }
+}
+
+function checkAuthentication() {
+    const currentUser = localStorage.getItem('currentUser');
+    const loginBtn = document.getElementById('loginBtn');
+    const userMenu = document.getElementById('userMenu');
+    const userName = document.getElementById('userName');
+    const welcomeSection = document.getElementById('welcomeSection');
+    const authRequiredElements = document.querySelectorAll('.auth-required');
+    
+    if (currentUser) {
+        // User is logged in
+        const user = JSON.parse(currentUser);
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (userMenu) userMenu.style.display = 'flex';
+        if (userName) userName.textContent = `Welcome, ${user.firstName || user.email}`;
+        if (welcomeSection) welcomeSection.style.display = 'none';
+        
+        // Show authenticated content
+        authRequiredElements.forEach(el => {
+            el.style.display = '';
+            el.classList.remove('auth-required');
+        });
+    } else {
+        // User is not logged in
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (userMenu) userMenu.style.display = 'none';
+        if (userName) userName.textContent = ''; // Clear any residual text
+        if (welcomeSection) welcomeSection.style.display = 'block';
+        
+        // Hide authenticated content
+        authRequiredElements.forEach(el => {
+            el.style.display = 'none';
+        });
+    }
 }
 
 function bindEvents() {
@@ -48,9 +92,12 @@ function bindEvents() {
     document.getElementById('generateChartsBtn')?.addEventListener('click', handleAnalytics);
     document.getElementById('refreshProducts')?.addEventListener('click', loadProductsFlow);
 
-    document.getElementById('heroStartBtn')?.addEventListener('click', () => scrollToAnchor('#preferencesSection'));
-    document.getElementById('heroBrowseBtn')?.addEventListener('click', () => scrollToAnchor('#recommendations'));
-    document.getElementById('heroSyncPrefs')?.addEventListener('click', () => scrollToAnchor('#preferencesSection'));
+    document.getElementById('heroStartBtn')?.addEventListener('click', () => navigateToSection('#personalize'));
+    document.getElementById('heroBrowseBtn')?.addEventListener('click', () => navigateToSection('#search'));
+    document.getElementById('heroSyncPrefs')?.addEventListener('click', () => navigateToSection('#personalize'));
+
+    // Logout handler
+    document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
 
     document.querySelectorAll('[data-quick-filter]')?.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -94,9 +141,7 @@ function bindEvents() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const target = link.getAttribute('href');
-            setActiveNav(target);
-            if (target === '#analytics') toggleAnalytics(true);
-            scrollToAnchor(target);
+            navigateToSection(target);
         });
     });
 
@@ -120,6 +165,10 @@ function bindEvents() {
             handleFeatureSelection(feature);
         });
     });
+
+    // Essential items handlers
+    document.getElementById('addEssentialItemBtn')?.addEventListener('click', handleAddEssentialItem);
+    document.getElementById('essentialItemSelect')?.addEventListener('change', handleEssentialItemSelectChange);
 }
 
 async function loadProductsFlow() {
@@ -149,7 +198,7 @@ function applyFilters() {
 async function handleRecommendations() {
     if (!state.preferences) {
         showToast('Save your preferences first.', 'error');
-        scrollToAnchor('#preferencesSection');
+        navigateToSection('#personalize');
         return;
     }
 
@@ -163,7 +212,6 @@ async function handleRecommendations() {
             try { await saveRecommendations(window.CURRENT_USER.uid, state.filteredProducts); } catch (e) { console.error('Failed to save recommendations to Firestore', e); }
         }
         showToast('Personalized recommendations updated.', 'success');
-        scrollToAnchor('#recommendations');
     } catch (error) {
         showToast('Could not fetch recommendations.', 'error');
         console.error(error);
@@ -177,9 +225,12 @@ async function handleAnalytics() {
     try {
         const data = await fetchAnalytics();
         renderAnalyticsCharts(data);
-        toggleAnalytics(true);
         showToast('Analytics generated.', 'success');
-        scrollToAnchor('#analytics');
+        // Scroll to analytics section within personalize page
+        const analyticsSection = document.getElementById('analytics');
+        if (analyticsSection) {
+            analyticsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     } catch (error) {
         showToast('Failed to generate analytics.', 'error');
         console.error(error);
@@ -266,6 +317,52 @@ function syncHouseholdSize() {
     if (household && total > 0) household.value = total;
 }
 
+function handleLogout() {
+    localStorage.removeItem('currentUser');
+    showToast('Logged out successfully', 'success');
+    setTimeout(() => {
+        window.location.reload();
+    }, 1000);
+}
+
+function navigateToSection(sectionId) {
+    // Hide all main sections
+    const sections = ['home', 'personalize', 'featuresBar', 'recommendations', 'analytics', 'search'];
+    sections.forEach(id => {
+        const section = document.getElementById(id);
+        if (section) {
+            section.style.display = 'none';
+        }
+    });
+    
+    // Update active nav link
+    setActiveNav(sectionId);
+    
+    // Show the requested section
+    const targetSection = sectionId.replace('#', '');
+    const sectionElement = document.getElementById(targetSection);
+    
+    if (sectionElement) {
+        sectionElement.style.display = '';
+        
+        // Special handling for personalize - also show features, recommendations, and analytics
+        if (targetSection === 'personalize') {
+            const featuresSection = document.getElementById('featuresBar');
+            const recommendationsSection = document.getElementById('recommendations');
+            const analyticsSection = document.getElementById('analytics');
+            if (featuresSection) featuresSection.style.display = '';
+            if (recommendationsSection) recommendationsSection.style.display = '';
+            if (analyticsSection) {
+                analyticsSection.style.display = '';
+                analyticsSection.classList.remove('is-hidden');
+            }
+        }
+        
+        // Scroll to top of page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
 function handleFeatureSelection(feature) {
     setActiveFeature(feature);
     
@@ -291,3 +388,85 @@ function handleFeatureSelection(feature) {
         handleRecommendations();
     }
 }
+
+function handleEssentialItemSelectChange() {
+    const select = document.getElementById('essentialItemSelect');
+    const customInput = document.getElementById('customEssentialItemInput');
+    
+    if (!select || !customInput) return;
+    
+    if (select.value === 'others') {
+        customInput.style.display = 'block';
+        customInput.focus();
+    } else {
+        customInput.style.display = 'none';
+        customInput.value = '';
+    }
+}
+
+function handleAddEssentialItem() {
+    const select = document.getElementById('essentialItemSelect');
+    const customInput = document.getElementById('customEssentialItemInput');
+    let itemToAdd = '';
+    
+    if (select?.value === 'others') {
+        itemToAdd = customInput?.value?.trim();
+        if (!itemToAdd) {
+            showToast('Please enter a custom item name.', 'error');
+            customInput?.focus();
+            return;
+        }
+    } else {
+        itemToAdd = select?.value;
+        if (!itemToAdd) {
+            showToast('Please select an item first.', 'error');
+            return;
+        }
+    }
+    
+    const items = addEssentialItem(itemToAdd);
+    renderEssentialItems();
+    showToast(`${itemToAdd} added to essential items.`, 'success');
+    
+    // Reset select and input
+    if (select) select.value = '';
+    if (customInput) {
+        customInput.value = '';
+        customInput.style.display = 'none';
+    }
+}
+
+function renderEssentialItems() {
+    const items = loadEssentialItems();
+    const container = document.getElementById('essentialItemsListContainer');
+    const listElement = document.getElementById('essentialItemsList');
+    
+    if (!container || !listElement) return;
+    
+    if (items.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    listElement.innerHTML = items.map(item => `
+        <div class="chip" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>${item}</span>
+            <button 
+                type="button" 
+                onclick="window.removeEssentialItemHandler('${item}')" 
+                style="background: none; border: none; color: var(--text); cursor: pointer; padding: 0; font-size: 1.2rem; line-height: 1;"
+                title="Remove ${item}"
+            >×</button>
+        </div>
+    `).join('');
+}
+
+function handleRemoveEssentialItem(item) {
+    removeEssentialItem(item);
+    renderEssentialItems();
+    showToast(`${item} removed from essential items.`, 'info');
+}
+
+// Make remove handler available globally for onclick
+window.removeEssentialItemHandler = handleRemoveEssentialItem;
