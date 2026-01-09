@@ -277,7 +277,8 @@ The system includes 8 intelligent recommendation modes that can be toggled witho
 
 This project is for educational purposes as part of a Capstone Project.
 
-## Contributors
 
-Capstone Project Team - 2026
+
+
+
 
