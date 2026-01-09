@@ -294,7 +294,50 @@
             display: block;
         }
 
+        .role-toggle-wrapper {
+            position: absolute;
+            top: 4rem;
+            right: 2rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .role-btn {
+            padding: 0.6rem 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .role-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .role-btn.active {
+            background: var(--white);
+            color: var(--secondary-color);
+            border-color: var(--white);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
         @media (max-width: 768px) {
+            .role-toggle-wrapper {
+                top: 1rem;
+                right: 1rem;
+            }
+
+            .role-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
             .login-container {
                 grid-template-columns: 1fr;
             }
@@ -322,6 +365,12 @@
 </head>
 <body>
     <div class="login-wrapper">
+        <!-- Role toggle buttons in top right -->
+        <div class="role-toggle-wrapper">
+            <button class="role-btn active" data-role="user" id="userRoleBtn">👤 User</button>
+            <button class="role-btn" data-role="admin" id="adminRoleBtn">⚙️ Admin</button>
+        </div>
+
         <div class="login-container">
             <div class="login-left">
                 <div class="login-icon"><img src="favicon.ico" alt="IntelliGrocer Logo"></div>
@@ -372,7 +421,7 @@
                         <a href="#" class="forgot-password">Forgot Password?</a>
                     </div>
 
-                    <button type="submit" class="login-btn">Login</button>
+                    <button type="submit" class="login-btn" id="loginBtn">Login</button>
                 </form>
 
                 <div class="divider">
@@ -405,6 +454,28 @@
             this.textContent = type === 'password' ? '👁️' : '🙈';
         });
 
+        // Role selection with toggle buttons
+        let selectedRole = localStorage.getItem('loginRole') || 'user';
+        const roleBtns = document.querySelectorAll('.role-btn');
+        const applyRoleSelection = () => {
+            roleBtns.forEach(btn => {
+                const isActive = btn.getAttribute('data-role') === selectedRole;
+                if (isActive) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        };
+        roleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedRole = btn.getAttribute('data-role');
+                localStorage.setItem('loginRole', selectedRole);
+                applyRoleSelection();
+            });
+        });
+        applyRoleSelection();
+
         // Form submission
         const loginForm = document.getElementById('loginForm');
         const errorMessage = document.getElementById('errorMessage');
@@ -426,8 +497,12 @@
                     email: user.email,
                     firstName: user.displayName || user.email.split('@')[0]
                 }));
-                
-                window.location.href = 'index.html';
+                // Redirect based on selected role
+                if (selectedRole === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
             } catch (err) {
                 errorMessage.textContent = err?.message || 'Invalid email or password. Please try again.';
                 errorMessage.classList.add('show');
@@ -450,8 +525,9 @@
                         email: user.email,
                         firstName: user.displayName || user.email.split('@')[0]
                     }));
-                    
-                    window.location.href = 'index.html';
+                    // Respect last selected role for social login as well
+                    const role = localStorage.getItem('loginRole') || 'user';
+                    window.location.href = role === 'admin' ? 'admin.html' : 'index.html';
                 } catch (err) {
                     errorMessage.textContent = err?.message || 'Google sign-in failed.';
                     errorMessage.classList.add('show');

@@ -20,7 +20,9 @@ import {
   query,
   where,
   orderBy,
-  limit
+  limit,
+  deleteDoc,
+  addDoc
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const firebaseConfig = (window.__FIREBASE_CONFIG__ ?? {
@@ -240,3 +242,87 @@ export async function getUserProfile(uid) {
   return data.profile ?? null;
 }
 
+// Admin: CRUD operations for products
+export async function addProduct(productData) {
+  const productsRef = collection(db, 'products');
+  const docRef = await addDoc(productsRef, {
+    ...productData,
+    name_lower: (productData.name || '').toLowerCase(),
+    category_lower: (productData.category || '').toLowerCase(),
+    search_tokens: generateSearchTokens(productData.name),
+    search_score: 100,
+    created_at: Date.now(),
+    updated_at: Date.now()
+  });
+  return docRef.id;
+}
+
+export async function updateProduct(productId, productData) {
+  const productRef = doc(db, 'products', productId);
+  await setDoc(productRef, {
+    ...productData,
+    name_lower: (productData.name || '').toLowerCase(),
+    category_lower: (productData.category || '').toLowerCase(),
+    search_tokens: generateSearchTokens(productData.name),
+    updated_at: Date.now()
+  }, { merge: true });
+}
+
+export async function deleteProduct(productId) {
+  const productRef = doc(db, 'products', productId);
+  await deleteDoc(productRef);
+}
+
+// Helper to generate search tokens
+function generateSearchTokens(name) {
+  if (!name) return [];
+  const tokens = new Set();
+  const clean = name.toLowerCase().trim();
+  tokens.add(clean);
+  
+  // Add individual words
+  const words = clean.split(/\s+/);
+  words.forEach(w => {
+    if (w.length > 2) tokens.add(w);
+  });
+  
+  // Add prefixes
+  for (let i = 2; i <= clean.length && i <= 10; i++) {
+    tokens.add(clean.substring(0, i));
+  }
+  
+  return Array.from(tokens);
+}
+
+// Admin: CRUD operations for deals of the day
+export async function getDeals() {
+  const col = collection(db, 'deals');
+  const q = query(col, orderBy('priority', 'desc'));
+  const snap = await getDocs(q);
+  const items = [];
+  snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+  return items;
+}
+
+export async function addDeal(dealData) {
+  const dealsRef = collection(db, 'deals');
+  const docRef = await addDoc(dealsRef, {
+    ...dealData,
+    created_at: Date.now(),
+    updated_at: Date.now()
+  });
+  return docRef.id;
+}
+
+export async function updateDeal(dealId, dealData) {
+  const dealRef = doc(db, 'deals', dealId);
+  await setDoc(dealRef, {
+    ...dealData,
+    updated_at: Date.now()
+  }, { merge: true });
+}
+
+export async function deleteDeal(dealId) {
+  const dealRef = doc(db, 'deals', dealId);
+  await deleteDoc(dealRef);
+}

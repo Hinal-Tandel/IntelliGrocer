@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard · IntelliGrocer</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Firebase config -->
+  <script src="./js/firebase-config.js"></script>
+
+  <div class="page-shell">
+    <header class="app-bar">
+      <div class="brand">
+        <span class="brand-mark"><i class="fas fa-shopping-cart"></i></span>
+        <div>
+          <p class="eyebrow">IntelliGrocer</p>
+          <h1>Admin Dashboard</h1>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">User App</a>
+      </nav>
+      <div id="authButtons">
+        <div id="userMenu" class="user-menu">
+          <span id="userName" class="user-name"></span>
+          <button id="logoutAdmin" class="btn btn-pill btn-ghost">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Overview</p>
+            <h3>System Statistics</h3>
+            <p class="lede">Monitor grocery inventory, discounts, and deals.</p>
+          </div>
+        </div>
+
+        <div class="hero-metrics" style="margin-bottom: 2rem;">
+          <div class="metric">
+            <span class="metric-value" id="statItems">—</span>
+            <span class="metric-label">Total Items</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value" id="statCats">—</span>
+            <span class="metric-label">Categories</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value" id="statAvgDisc">—</span>
+            <span class="metric-label">Avg. Discount</span>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-bottom: 2rem;">
+          <div class="panel-card muted">
+            <p class="eyebrow">By Category</p>
+            <h4 style="margin-bottom: 1rem;">Discount Overview</h4>
+            <div id="discountOverview">Loading…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Deals of the Day Section -->
+      <section class="section-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Promotions</p>
+            <h3>Deals of the Day</h3>
+            <p class="lede">Manage featured deals and promotional offers</p>
+          </div>
+          <button class="btn btn-primary" id="addDealBtn">
+            <span style="font-size: 1.1rem; margin-right: 0.25rem;">+</span> Add Deal
+          </button>
+        </div>
+
+        <div class="table-wrap" style="margin-top: 1.5rem;">
+          <table style="width:100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--border);">
+                <th style="padding:.75rem; text-align:left; font-weight:600; color: var(--text-dark);">Product</th>
+                <th style="padding:.75rem; text-align:left; font-weight:600; color: var(--text-dark);">Category</th>
+                <th style="padding:.75rem; text-align:left; font-weight:600; color: var(--text-dark);">Discount</th>
+                <th style="padding:.75rem; text-align:left; font-weight:600; color: var(--text-dark);">Priority</th>
+                <th style="padding:.75rem; text-align:left; font-weight:600; color: var(--text-dark);">Status</th>
+                <th style="padding:.75rem; text-align:center; font-weight:600; color: var(--text-dark); width:140px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dealsTableBody">
+              <tr><td colspan="6" style="padding: 1.5rem; text-align: center; color: var(--text-soft);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Inventory</p>
+            <h3>Grocery Items</h3>
+            <p class="lede">Complete list of all products with pricing and discount details.</p>
+          </div>
+          <button class="btn btn-primary" id="addProductBtn">+ Add Product</button>
+        </div>
+
+        <div style="overflow:auto; background: var(--surface); border-radius: var(--radius); padding: 1rem;">
+          <table style="width:100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th style="padding:.75rem; border-bottom:2px solid var(--border); text-align:left; font-weight:600; color: var(--text-dark);">Name</th>
+                <th style="padding:.75rem; border-bottom:2px solid var(--border); text-align:left; font-weight:600; color: var(--text-dark);">Category</th>
+                <th style="padding:.75rem; border-bottom:2px solid var(--border); text-align:left; font-weight:600; color: var(--text-dark);">Qty</th>
+                <th style="padding:.75rem; border-bottom:2px solid var(--border); text-align:left; font-weight:600; color: var(--text-dark);">Original</th>
+                <th style="padding:.75rem; border-bottom:2px solid var(--border); text-align:left; font-weight:600; color: var(--text-dark);">Discounted</th>
+                <th style="padding:.75rem; border-bottom:2px solid var(--border); text-align:left; font-weight:600; color: var(--text-dark);">Discount</th>
+                <th style="padding:.75rem; border-bottom:2px solid var(--border); text-align:left; font-weight:600; color: var(--text-dark);">Essential</th>
+                <th style="padding:.75rem; border-bottom:2px solid var(--border); text-align:center; font-weight:600; color: var(--text-dark); width:140px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTableBody">
+              <tr><td colspan="8" style="padding: 1.5rem; text-align: center; color: var(--text-soft);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Product Modal -->
+  <div id="productModal" class="modal is-hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content" style="max-width: 700px; border-radius: 16px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="modalTitle" style="margin: 0; font-size: 1.5rem; padding: 1.5rem 1.5rem 0.5rem 1.5rem;">Add Product</h3>
+          <p class="micro" style="color: var(--text-soft); padding: 0 1.5rem 1.5rem 1.5rem; margin-top: 0.25rem;">Fill in the product details below</p>
+        </div>
+        
+      </div>
+      <div class="modal-body" style="padding: 2rem;">
+        <form id="productForm">
+          <input type="hidden" id="productId" />
+          
+          <!-- Basic Information -->
+          <div style="margin-bottom: 1.5rem; padding: 1.25rem; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);">
+            <p class="eyebrow" style="margin-bottom: 1rem;">Basic Information</p>
+            <div class="grid two" style="gap: 1rem;">
+              <label class="field span-2">
+                <span>Product Name <span class="required">*</span></span>
+                <input type="text" id="productName" required placeholder="e.g., Basmati Rice" style="font-size: 1rem;" />
+              </label>
+              
+              <label class="field">
+                <span>Category <span class="required">*</span></span>
+                <input type="text" id="productCategory" required placeholder="e.g., Grains" list="categoryList" />
+                <datalist id="categoryList">
+                  <option value="Grains">
+                  <option value="Pulses">
+                  <option value="Cooking">
+                  <option value="Dairy">
+                  <option value="Bakery">
+                  <option value="Protein">
+                  <option value="Vegetables">
+                  <option value="Fruits">
+                  <option value="Spices">
+                  <option value="Essentials">
+                  <option value="Household">
+                  <option value="Personal Care">
+                </datalist>
+              </label>
+              
+              <label class="field">
+                <span>Quantity / Size</span>
+                <input type="text" id="productQuantity" placeholder="e.g., 5 kg, 1 L, 500 g" />
+              </label>
+            </div>
+          </div>
+          
+          <!-- Pricing -->
+          <div style="margin-bottom: 1.5rem; padding: 1.25rem; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);">
+            <p class="eyebrow" style="margin-bottom: 1rem;">Pricing & Discount</p>
+            <div class="grid two" style="gap: 1rem;">
+              <label class="field">
+                <span>Original Price (₹) <span class="required">*</span></span>
+                <input type="number" id="productOriginalPrice" required step="0.01" min="0" placeholder="650.00" />
+              </label>
+              
+              <label class="field">
+                <span>Discounted Price (₹) <span class="required">*</span></span>
+                <input type="number" id="productDiscountedPrice" required step="0.01" min="0" placeholder="520.00" />
+              </label>
+              
+              <label class="field">
+                <span>Discount Percentage</span>
+                <input type="text" id="productDiscount" placeholder="e.g., 20%" />
+                <small class="micro">Auto-calculated if left empty</small>
+              </label>
+              
+              <div class="field" style="display: flex; align-items: center; padding-top: 1.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="productEssential" style="width: 18px; height: 18px; cursor: pointer;" />
+                  <span style="font-weight: 500;">Mark as Essential Item</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Actions -->
+          <div style="display: flex; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 0.85rem 1.5rem; font-size: 1rem;">
+              <span id="saveButtonText">💾 Save Product</span>
+            </button>
+            <button type="button" class="btn btn-ghost" id="cancelBtn" style="padding: 0.85rem 1.5rem;">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deal Modal -->
+  <div id="dealModal" class="modal is-hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content" style="max-width: 600px; border-radius: 16px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="dealModalTitle" style="margin: 0; font-size: 1.5rem; padding: 1.5rem 1.5rem 0.5rem 1.5rem;">Add Deal</h3>
+          <p class="micro" style="color: var(--text-soft); padding: 0 1.5rem 1.5rem 1.5rem; margin-top: 0.25rem;">Configure deal details</p>
+        </div>
+      </div>
+      <div class="modal-body" style="padding: 2rem;">
+        <form id="dealForm">
+          <input type="hidden" id="dealId" />
+          
+          <div style="margin-bottom: 1.5rem; padding: 1.25rem; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);">
+            <p class="eyebrow" style="margin-bottom: 1rem;">Deal Information</p>
+            
+            <label class="field" style="margin-bottom: 1rem;">
+              <span>Product Name <span class="required">*</span></span>
+              <input type="text" id="dealProductName" required placeholder="e.g., Premium Basmati Rice 5kg" style="font-size: 1rem;" />
+            </label>
+            
+            <label class="field" style="margin-bottom: 1rem;">
+              <span>Product ID (Optional)</span>
+              <input type="text" id="dealProductId" placeholder="Link to existing product" />
+              <small style="color: var(--text-soft); font-size: 0.85rem; display: block; margin-top: 0.25rem;">Leave empty for standalone deal</small>
+            </label>
+            
+            <div class="grid two" style="gap: 1rem; margin-bottom: 1rem;">
+              <label class="field">
+                <span>Category <span class="required">*</span></span>
+                <input type="text" id="dealCategory" required placeholder="e.g., Grains" list="dealCategoryList" />
+                <datalist id="dealCategoryList">
+                  <option value="Grains">
+                  <option value="Pulses">
+                  <option value="Cooking">
+                  <option value="Dairy">
+                  <option value="Bakery">
+                  <option value="Protein">
+                  <option value="Vegetables">
+                  <option value="Fruits">
+                  <option value="Spices">
+                  <option value="Essentials">
+                </datalist>
+              </label>
+              
+              <label class="field">
+                <span>Discount <span class="required">*</span></span>
+                <input type="text" id="dealDiscount" required placeholder="e.g., 25% OFF" />
+              </label>
+            </div>
+            
+            <div class="grid two" style="gap: 1rem;">
+              <label class="field">
+                <span>Priority <span class="required">*</span></span>
+                <input type="number" id="dealPriority" required min="1" max="10" value="5" />
+                <small style="color: var(--text-soft); font-size: 0.85rem; display: block; margin-top: 0.25rem;">1 = Lowest, 10 = Highest</small>
+              </label>
+              
+              <label class="field">
+                <span>Status <span class="required">*</span></span>
+                <select id="dealStatus" required style="padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; font-family: inherit;">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="scheduled">Scheduled</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+            <button type="button" class="btn btn-ghost" id="cancelDealBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="saveDealBtn">
+              <span style="font-size: 1rem; margin-right: 0.25rem;">💾</span>
+              <span id="saveDealBtnText">Save Deal</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/admin.js"></script>
+</body>
+</html>
