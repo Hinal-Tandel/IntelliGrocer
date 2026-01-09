@@ -1,10 +1,11 @@
 import { fetchProducts, fetchRecommendations, fetchAnalytics } from './api.js';
 import { state, setProducts, setFilteredProducts, setCategories, setPreferences, setFilters, getMetrics, setActiveFeature, getActiveFeature } from './state.js';
-import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards } from './ui.js';
+import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards, renderRecommendationSummary } from './ui.js';
 import { filterProducts } from './filters.js';
 import { savePreferences, loadPreferences, loadEssentialItems, addEssentialItem, removeEssentialItem } from './storage.js';
 import { scrollToAnchor } from './utils.js';
 import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories } from './firebase.js';
+import { generateBudgetRecommendations } from './recommendation.js';
 
 document.addEventListener('DOMContentLoaded', ensureAuthThenInit);
 
@@ -256,16 +257,31 @@ async function handleRecommendations() {
 
     showLoading(true);
     try {
-        const data = await fetchRecommendations(state.preferences);
-        setFilteredProducts(data.recommendations || []);
-        renderProducts(state.filteredProducts, 'recommendationsGrid');
+        // Use the budget-based recommendation algorithm
+        const recommendationResult = generateBudgetRecommendations(state.products, state.preferences);
+        
+        // Update state with recommended products
+        setFilteredProducts(recommendationResult.products);
+        
+        // Render products and summary
+        renderProducts(recommendationResult.products, 'recommendationsGrid');
+        renderRecommendationSummary(recommendationResult);
         renderMetrics(getMetrics());
+        
+        // Save to Firestore
         if (window.CURRENT_USER?.uid) {
-            try { await saveRecommendations(window.CURRENT_USER.uid, state.filteredProducts); } catch (e) { console.error('Failed to save recommendations to Firestore', e); }
+            try { 
+                await saveRecommendations(window.CURRENT_USER.uid, recommendationResult.products); 
+            } catch (e) { 
+                console.error('Failed to save recommendations to Firestore', e); 
+            }
         }
-        showToast('Personalized recommendations updated.', 'success');
+        
+        // Navigate to recommendations section
+        navigateToSection('#recommendations');
+        showToast(`${recommendationResult.metrics.totalProducts} products recommended within budget!`, 'success');
     } catch (error) {
-        showToast('Could not fetch recommendations.', 'error');
+        showToast(error.message || 'Could not generate recommendations.', 'error');
         console.error(error);
     } finally {
         showLoading(false);
@@ -410,6 +426,12 @@ function navigateToSection(sectionId) {
             }
         }
         
+        // Special handling for recommendations - show features bar too
+        if (targetSection === 'recommendations') {
+            const featuresSection = document.getElementById('featuresBar');
+            if (featuresSection) featuresSection.style.display = '';
+        }
+        
         // Special handling for search - show all products initially
         if (targetSection === 'search') {
             if (state.products && state.products.length > 0) {
@@ -420,8 +442,8 @@ function navigateToSection(sectionId) {
             }
         }
         
-        // Scroll to top of page
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Scroll to section
+        sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 
