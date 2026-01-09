@@ -4,11 +4,7 @@ import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPre
 import { filterProducts } from './filters.js';
 import { savePreferences, loadPreferences, loadEssentialItems, addEssentialItem, removeEssentialItem } from './storage.js';
 import { scrollToAnchor, formatCurrency } from './utils.js';
-<<<<<<< Updated upstream
 import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories, saveRecommendationReport, getRecommendationReports, getRecommendationReport, deleteRecommendationReport, getUserProfile } from './firebase.js';
-=======
-import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories, saveRecommendationReport, getRecommendationReports, getRecommendationReport, getUserProfile } from './firebase.js';
->>>>>>> Stashed changes
 import { generateBudgetRecommendations, generateRecommendationReport, generateHTMLReport } from './recommendation.js';
 
 document.addEventListener('DOMContentLoaded', ensureAuthThenInit);
@@ -207,10 +203,7 @@ function bindEvents() {
     document.getElementById('reportsContainer')?.addEventListener('click', async (e) => {
         const viewBtn = e.target.closest('.view-report-btn');
         const downloadBtn = e.target.closest('.download-report-btn');
-<<<<<<< Updated upstream
         const deleteBtn = e.target.closest('.delete-report-btn');
-=======
->>>>>>> Stashed changes
         
         if (viewBtn) {
             const reportId = viewBtn.getAttribute('data-report-id');
@@ -219,7 +212,6 @@ function bindEvents() {
             const reportId = downloadBtn.getAttribute('data-report-id');
             const format = downloadBtn.getAttribute('data-format') || 'html';
             await handleDownloadReport(reportId, format);
-<<<<<<< Updated upstream
         } else if (deleteBtn) {
             const reportId = deleteBtn.getAttribute('data-report-id');
             await handleDeleteReport(reportId);
@@ -232,8 +224,6 @@ function bindEvents() {
         if (removeBtn) {
             const index = Number(removeBtn.getAttribute('data-product-index'));
             handleRemoveItem(index);
-=======
->>>>>>> Stashed changes
         }
     });
 }
@@ -286,57 +276,6 @@ function updateProductQuantity(index, quantity) {
     if (totalSpan && product) {
         const total = (product.discounted_price || 0) * qty;
         totalSpan.textContent = formatCurrency(total);
-    }
-    
-    // Update budget summary
-    updateBudgetSummary();
-}
-
-function calculateTotalCostWithQuantities() {
-    let total = 0;
-    state.filteredProducts.forEach((product, index) => {
-        const qty = getProductQuantity(index);
-        const price = parseFloat(product.discounted_price) || 0;
-        total += price * qty;
-    });
-    return total;
-}
-
-function updateBudgetSummary() {
-    const summaryPanel = document.getElementById('budgetSummary');
-    if (!summaryPanel || !state.preferences?.monthlyBudget) {
-        if (summaryPanel) summaryPanel.style.display = 'none';
-        return;
-    }
-    
-    const budget = state.preferences.monthlyBudget;
-    const totalCost = calculateTotalCostWithQuantities();
-    const remaining = budget - totalCost;
-    const isOverBudget = remaining < 0;
-    
-    // Show the panel
-    summaryPanel.style.display = 'block';
-    
-    // Update values
-    document.getElementById('budgetTotalCost').textContent = formatCurrency(totalCost);
-    document.getElementById('budgetLimit').textContent = formatCurrency(budget);
-    document.getElementById('budgetRemaining').textContent = formatCurrency(Math.abs(remaining));
-    
-    // Update status text and color
-    const statusText = document.getElementById('budgetStatusText');
-    const remainingEl = document.getElementById('budgetRemaining');
-    
-    if (isOverBudget) {
-        statusText.textContent = '⚠️ Over Budget';
-        statusText.style.color = 'var(--error)';
-        remainingEl.style.color = 'var(--error)';
-        remainingEl.parentElement.querySelector('.micro').textContent = 'Over by';
-    } else {
-        const percentage = (totalCost / budget * 100).toFixed(1);
-        statusText.textContent = `✓ Within Budget (${percentage}% used)`;
-        statusText.style.color = 'var(--success)';
-        remainingEl.style.color = 'var(--success)';
-        remainingEl.parentElement.querySelector('.micro').textContent = 'Remaining';
     }
 }
 
@@ -543,9 +482,6 @@ async function handleRecommendations() {
         renderProducts(recommendationResult.products, 'recommendationsGrid');
         renderRecommendationSummary(recommendationResult);
         renderMetrics(getMetrics());
-        
-        // Update budget summary
-        updateBudgetSummary();
         
         // Save to Firestore
         if (window.CURRENT_USER?.uid) {
@@ -938,11 +874,7 @@ async function handleGenerateReport() {
         return;
     }
 
-<<<<<<< Updated upstream
     if (!state.lastRecommendationResult || !state.lastRecommendationResult.products || state.lastRecommendationResult.products.length === 0) {
-=======
-    if (!state.filteredProducts || state.filteredProducts.length === 0) {
->>>>>>> Stashed changes
         showToast('Please generate recommendations first', 'error');
         navigateToSection('#personalize');
         return;
@@ -953,21 +885,15 @@ async function handleGenerateReport() {
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         const userName = currentUser?.firstName || currentUser?.email || 'User';
 
-<<<<<<< Updated upstream
         // Use the stored recommendation result directly
         const recommendationResult = state.lastRecommendationResult;
         
         // Add selected quantities to products
         const productsWithQuantities = recommendationResult.products.map((product, index) => ({
-=======
-        // Create recommendation result with quantities
-        const productsWithQuantities = state.filteredProducts.map((product, index) => ({
->>>>>>> Stashed changes
             ...product,
             selectedQuantity: getProductQuantity(index)
         }));
 
-<<<<<<< Updated upstream
         // Update recommendation result with quantities
         const updatedRecommendationResult = {
             ...recommendationResult,
@@ -975,31 +901,13 @@ async function handleGenerateReport() {
         };
 
         const report = generateRecommendationReport(updatedRecommendationResult, state.preferences, userName);
-=======
-        const recommendationResult = {
-            products: productsWithQuantities,
-            totalCost: calculateTotalCostWithQuantities(),
-            totalSavings: productsWithQuantities.reduce((sum, p) => {
-                const savings = (parseFloat(p.original_price) || 0) - (parseFloat(p.discounted_price) || 0);
-                return sum + (savings * (p.selectedQuantity || 1));
-            }, 0),
-            remainingBudget: state.preferences.monthlyBudget - calculateTotalCostWithQuantities(),
-            metrics: getMetrics()
-        };
-
-        const report = generateRecommendationReport(recommendationResult, state.preferences, userName);
->>>>>>> Stashed changes
         await saveRecommendationReport(window.CURRENT_USER.uid, report);
 
         showToast('Report generated successfully!', 'success');
         await loadProfileSection();
     } catch (error) {
         console.error('Failed to generate report:', error);
-<<<<<<< Updated upstream
         showToast(`Failed to generate report: ${error.message}`, 'error');
-=======
-        showToast('Failed to generate report', 'error');
->>>>>>> Stashed changes
     } finally {
         showLoading(false);
     }
@@ -1093,7 +1001,6 @@ ${htmlContent}
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
-<<<<<<< Updated upstream
 
 async function handleDeleteReport(reportId) {
     if (!window.CURRENT_USER?.uid) return;
@@ -1114,5 +1021,3 @@ async function handleDeleteReport(reportId) {
         showLoading(false);
     }
 }
-=======
->>>>>>> Stashed changes
