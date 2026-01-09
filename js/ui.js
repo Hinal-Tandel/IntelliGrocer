@@ -12,8 +12,8 @@ export function renderCategoryFilter(categories) {
     });
 }
 
-export function renderProducts(products) {
-    const grid = document.getElementById('recommendationsGrid');
+export function renderProducts(products, gridId = 'recommendationsGrid') {
+    const grid = document.getElementById(gridId);
     if (!grid) return;
 
     if (!products || products.length === 0) {

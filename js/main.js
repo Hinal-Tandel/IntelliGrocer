@@ -1,11 +1,10 @@
 import { fetchProducts, fetchRecommendations, fetchAnalytics } from './api.js';
 import { state, setProducts, setFilteredProducts, setCategories, setPreferences, setFilters, getMetrics, setActiveFeature, getActiveFeature } from './state.js';
-import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards, renderRecommendationSummary } from './ui.js';
+import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards } from './ui.js';
 import { filterProducts } from './filters.js';
 import { savePreferences, loadPreferences, loadEssentialItems, addEssentialItem, removeEssentialItem } from './storage.js';
 import { scrollToAnchor } from './utils.js';
-import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations } from './firebase.js';
-import { generateBudgetRecommendations, generateRecommendationSummary } from './recommendation.js';
+import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories } from './firebase.js';
 
 document.addEventListener('DOMContentLoaded', ensureAuthThenInit);
 
@@ -110,22 +109,45 @@ function bindEvents() {
         });
     });
 
-    document.getElementById('searchBtn')?.addEventListener('click', () => {
-        setFilters({ search: document.getElementById('searchInput')?.value.trim().toLowerCase() || '' });
-        applyFilters();
+    document.getElementById('searchBtn')?.addEventListener('click', async () => {
+        await handleSearch();
     });
 
-    document.getElementById('searchInput')?.addEventListener('keypress', (e) => {
+    document.getElementById('searchInput')?.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            setFilters({ search: e.target.value.trim().toLowerCase() });
-            applyFilters();
+            await handleSearch();
         }
     });
 
-    document.getElementById('categoryFilter')?.addEventListener('change', (e) => {
-        setFilters({ category: e.target.value });
-        applyFilters();
+    document.getElementById('categoryFilter')?.addEventListener('change', async (e) => {
+        const category = e.target.value;
+        setFilters({ category });
+        
+        if (category) {
+            // Use Firebase category search
+            showLoading(true);
+            try {
+                const results = await searchByCategory(category);
+                setFilteredProducts(results);
+                renderProducts(results, 'searchResultsGrid');
+                updateSearchResultsTitle(`Category: ${category}`, results.length);
+                showSearchResultsHeader(true);
+                showToast(`Found ${results.length} products in ${category}`, 'success');
+            } catch (error) {
+                console.error('Category search error:', error);
+                applyFilters(); // Fallback to client-side
+            } finally {
+                showLoading(false);
+            }
+        } else {
+            applyFilters();
+            const searchSection = document.getElementById('search');
+            if (searchSection && searchSection.style.display !== 'none') {
+                updateSearchResultsTitle('All Products', state.filteredProducts?.length || 0);
+                showSearchResultsHeader(true);
+            }
+        }
     });
 
     document.getElementById('discountFilter')?.addEventListener('change', (e) => {
@@ -146,8 +168,18 @@ function bindEvents() {
         });
     });
 
-    const grid = document.getElementById('recommendationsGrid');
-    grid?.addEventListener('click', (e) => {
+    // Handle clicks on both recommendation and search grids
+    const recommendationsGrid = document.getElementById('recommendationsGrid');
+    recommendationsGrid?.addEventListener('click', (e) => {
+        const card = e.target.closest('[data-product-index]');
+        if (!card) return;
+        const index = Number(card.getAttribute('data-product-index'));
+        const product = state.filteredProducts[index];
+        if (product) openProductModal(product);
+    });
+    
+    const searchGrid = document.getElementById('searchResultsGrid');
+    searchGrid?.addEventListener('click', (e) => {
         const card = e.target.closest('[data-product-index]');
         if (!card) return;
         const index = Number(card.getAttribute('data-product-index'));
@@ -177,7 +209,16 @@ async function loadProductsFlow() {
     try {
         const data = await fetchProducts();
         setProducts(data.products || []);
-        const categories = Array.from(new Set((data.products || []).map(p => p.category).filter(Boolean))).sort();
+        
+        // Get categories from Firebase config or products
+        let categories;
+        try {
+            categories = await getCategories();
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            categories = Array.from(new Set((data.products || []).map(p => p.category).filter(Boolean))).sort();
+        }
+        
         setCategories(categories);
         renderCategoryFilter(categories);
         renderMetrics(getMetrics());
@@ -193,7 +234,17 @@ async function loadProductsFlow() {
 function applyFilters() {
     const products = filterProducts(state.products, state.filters);
     setFilteredProducts(products);
-    renderProducts(products);
+    // Determine which grid to render to based on active section
+    const searchSection = document.getElementById('search');
+    const isSearchActive = searchSection && searchSection.style.display !== 'none';
+    const gridId = isSearchActive ? 'searchResultsGrid' : 'recommendationsGrid';
+    renderProducts(products, gridId);
+    
+    // Show search results header if in search section
+    if (isSearchActive) {
+        showSearchResultsHeader(true);
+        updateSearchResultsTitle('All Products', products.length);
+    }
 }
 
 async function handleRecommendations() {
@@ -205,31 +256,16 @@ async function handleRecommendations() {
 
     showLoading(true);
     try {
-        // Use the budget-based recommendation algorithm
-        const recommendationResult = generateBudgetRecommendations(state.products, state.preferences);
-        
-        // Update state with recommended products
-        setFilteredProducts(recommendationResult.products);
-        
-        // Render products and summary
-        renderProducts(recommendationResult.products);
-        renderRecommendationSummary(recommendationResult);
+        const data = await fetchRecommendations(state.preferences);
+        setFilteredProducts(data.recommendations || []);
+        renderProducts(state.filteredProducts, 'recommendationsGrid');
         renderMetrics(getMetrics());
-        
-        // Save to Firestore
         if (window.CURRENT_USER?.uid) {
-            try { 
-                await saveRecommendations(window.CURRENT_USER.uid, recommendationResult.products); 
-            } catch (e) { 
-                console.error('Failed to save recommendations to Firestore', e); 
-            }
+            try { await saveRecommendations(window.CURRENT_USER.uid, state.filteredProducts); } catch (e) { console.error('Failed to save recommendations to Firestore', e); }
         }
-        
-        // Navigate to recommendations section
-        navigateToSection('#recommendations');
-        showToast(`${recommendationResult.metrics.totalProducts} products recommended within budget!`, 'success');
+        showToast('Personalized recommendations updated.', 'success');
     } catch (error) {
-        showToast(error.message || 'Could not generate recommendations.', 'error');
+        showToast('Could not fetch recommendations.', 'error');
         console.error(error);
     } finally {
         showLoading(false);
@@ -374,14 +410,18 @@ function navigateToSection(sectionId) {
             }
         }
         
-        // Special handling for recommendations - show features bar too
-        if (targetSection === 'recommendations') {
-            const featuresSection = document.getElementById('featuresBar');
-            if (featuresSection) featuresSection.style.display = '';
+        // Special handling for search - show all products initially
+        if (targetSection === 'search') {
+            if (state.products && state.products.length > 0) {
+                setFilteredProducts(state.products);
+                renderProducts(state.products, 'searchResultsGrid');
+                updateSearchResultsTitle('All Products', state.products.length);
+                showSearchResultsHeader(true);
+            }
         }
         
-        // Scroll to section
-        sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Scroll to top of page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
@@ -488,6 +528,63 @@ async function handleRemoveEssentialItem(item) {
     await removeEssentialItem(item);
     await renderEssentialItems();
     showToast(`${item} removed from essential items.`, 'info');
+}
+
+// Handle search with Firebase
+async function handleSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput?.value.trim() || '';
+    
+    if (!searchTerm) {
+        // If empty, show all products
+        setFilters({ search: '' });
+        applyFilters();
+        updateSearchResultsTitle('All Products', state.products?.length || 0);
+        showSearchResultsHeader(true);
+        return;
+    }
+    
+    showLoading(true);
+    try {
+        const results = await searchProducts(searchTerm, 50);
+        setFilteredProducts(results);
+        renderProducts(results, 'searchResultsGrid');
+        updateSearchResultsTitle(`Search: "${searchTerm}"`, results.length);
+        showSearchResultsHeader(true);
+        
+        if (results.length > 0) {
+            showToast(`Found ${results.length} products for "${searchTerm}"`, 'success');
+        } else {
+            showToast(`No products found for "${searchTerm}"`, 'info');
+        }
+        
+        // Update filter state
+        setFilters({ search: searchTerm });
+    } catch (error) {
+        console.error('Search error:', error);
+        showToast('Search failed. Using local results.', 'error');
+        // Fallback to client-side search
+        setFilters({ search: searchTerm.toLowerCase() });
+        applyFilters();
+        updateSearchResultsTitle(`Search: "${searchTerm}"`, state.filteredProducts?.length || 0);
+        showSearchResultsHeader(true);
+    } finally {
+        showLoading(false);
+    }
+}
+
+function updateSearchResultsTitle(title, count) {
+    const titleElement = document.getElementById('searchResultsTitle');
+    if (titleElement) {
+        titleElement.textContent = `${title} (${count})`;
+    }
+}
+
+function showSearchResultsHeader(show) {
+    const header = document.getElementById('searchResultsHeader');
+    if (header) {
+        header.style.display = show ? 'block' : 'none';
+    }
 }
 
 // Make remove handler available globally for onclick
