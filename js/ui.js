@@ -265,21 +265,6 @@ export function showReportModal(report) {
                 </tbody>
             </table>
         </div>
-        
-        <div style="margin-top: 2rem; text-align: center;">
-            <h4 style="margin-bottom: 1rem;">Download Report</h4>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <button class="btn btn-primary download-format-btn" data-report-id="${report.id}" data-format="html">
-                    <i class="fas fa-file-code"></i> HTML
-                </button>
-                <button class="btn btn-secondary download-format-btn" data-report-id="${report.id}" data-format="pdf">
-                    <i class="fas fa-file-pdf"></i> PDF
-                </button>
-                <button class="btn btn-ghost download-format-btn" data-report-id="${report.id}" data-format="word">
-                    <i class="fas fa-file-word"></i> Word
-                </button>
-            </div>
-        </div>
     `;
     
     modal.classList.remove('is-hidden');

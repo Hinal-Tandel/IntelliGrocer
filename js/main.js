@@ -181,8 +181,17 @@ function bindEvents() {
     });
 
     document.getElementById('modalClose')?.addEventListener('click', closeProductModal);
-    document.getElementById('productModal')?.addEventListener('click', (e) => {
-        if (e.target.id === 'productModal') closeProductModal();
+    document.getElementById('productModal')?.addEventListener('click', async (e) => {
+        if (e.target.id === 'productModal') {
+            closeProductModal();
+        }
+        // Handle download buttons in modal
+        const downloadFormatBtn = e.target.closest('.download-format-btn');
+        if (downloadFormatBtn) {
+            const reportId = downloadFormatBtn.getAttribute('data-report-id');
+            const format = downloadFormatBtn.getAttribute('data-format');
+            await handleDownloadReport(reportId, format);
+        }
     });
 
     document.querySelectorAll('.feature-card').forEach(card => {
@@ -202,16 +211,30 @@ function bindEvents() {
     // Report card click delegation
     document.getElementById('reportsContainer')?.addEventListener('click', async (e) => {
         const viewBtn = e.target.closest('.view-report-btn');
-        const downloadBtn = e.target.closest('.download-report-btn');
+        const downloadToggleBtn = e.target.closest('.download-toggle-btn');
+        const downloadFormatBtn = e.target.closest('.download-format-btn');
         const deleteBtn = e.target.closest('.delete-report-btn');
         
         if (viewBtn) {
             const reportId = viewBtn.getAttribute('data-report-id');
             await handleViewReport(reportId);
-        } else if (downloadBtn) {
-            const reportId = downloadBtn.getAttribute('data-report-id');
-            const format = downloadBtn.getAttribute('data-format') || 'html';
+        } else if (downloadToggleBtn) {
+            // Toggle download menu visibility
+            const reportId = downloadToggleBtn.getAttribute('data-report-id');
+            const downloadMenu = document.querySelector(`.download-menu[data-report-id="${reportId}"]`);
+            if (downloadMenu) {
+                const isVisible = downloadMenu.style.display !== 'none';
+                // Close all other menus
+                document.querySelectorAll('.download-menu').forEach(menu => menu.style.display = 'none');
+                downloadMenu.style.display = isVisible ? 'none' : 'block';
+            }
+        } else if (downloadFormatBtn) {
+            const reportId = downloadFormatBtn.getAttribute('data-report-id');
+            const format = downloadFormatBtn.getAttribute('data-format');
             await handleDownloadReport(reportId, format);
+            // Close the menu after download
+            const downloadMenu = document.querySelector(`.download-menu[data-report-id="${reportId}"]`);
+            if (downloadMenu) downloadMenu.style.display = 'none';
         } else if (deleteBtn) {
             const reportId = deleteBtn.getAttribute('data-report-id');
             await handleDeleteReport(reportId);
@@ -224,6 +247,15 @@ function bindEvents() {
         if (removeBtn) {
             const index = Number(removeBtn.getAttribute('data-product-index'));
             handleRemoveItem(index);
+        }
+    });
+    
+    // Close download menus when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown')) {
+            document.querySelectorAll('.download-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
         }
     });
 }
@@ -946,13 +978,8 @@ async function handleDownloadReport(reportId, format = 'html') {
         const htmlContent = generateHTMLReport(report);
 
         if (format === 'pdf') {
-            // Open in new window for printing to PDF
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(htmlContent);
-            printWindow.document.close();
-            setTimeout(() => {
-                printWindow.print();
-            }, 500);
+            // Generate PDF using jsPDF and html2canvas
+            await generatePDFReport(htmlContent, report);
         } else if (format === 'word') {
             // Generate Word document using MHTML
             generateWordReport(htmlContent, report);
@@ -975,6 +1002,69 @@ async function handleDownloadReport(reportId, format = 'html') {
         showToast('Failed to download report', 'error');
     } finally {
         showLoading(false);
+    }
+}
+
+async function generatePDFReport(htmlContent, report) {
+    try {
+        // Create a temporary container for the HTML content
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.width = '800px';
+        tempContainer.innerHTML = htmlContent;
+        document.body.appendChild(tempContainer);
+
+        // Use html2canvas to convert HTML to canvas
+        const canvas = await html2canvas(tempContainer, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            windowWidth: 800
+        });
+
+        // Remove the temporary container
+        document.body.removeChild(tempContainer);
+
+        // Get jsPDF
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        // Calculate dimensions
+        const imgWidth = 210; // A4 width in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const pageHeight = 297; // A4 height in mm
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        // Add image to PDF
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        // Add new pages if content is longer than one page
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+
+        // Save the PDF
+        pdf.save(`IntelliGrocer_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        // Fallback to print window method
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        setTimeout(() => {
+            printWindow.print();
+        }, 500);
     }
 }
 
