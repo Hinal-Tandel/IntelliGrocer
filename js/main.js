@@ -4,7 +4,7 @@ import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPre
 import { filterProducts } from './filters.js';
 import { savePreferences, loadPreferences, loadEssentialItems, addEssentialItem, removeEssentialItem } from './storage.js';
 import { scrollToAnchor, formatCurrency } from './utils.js';
-import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories } from './firebase.js';
+import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories, saveUserProfile, getUserProfile } from './firebase.js';
 import { generateBudgetRecommendations } from './recommendation.js';
 
 document.addEventListener('DOMContentLoaded', ensureAuthThenInit);
@@ -15,6 +15,18 @@ function ensureAuthThenInit() {
             window.location.href = 'login.html';
         } else {
             window.CURRENT_USER = user;
+            // Persist basic profile information to Firestore
+            try {
+                const stored = localStorage.getItem('currentUser');
+                const parsed = stored ? JSON.parse(stored) : null;
+                const profile = {
+                    email: user.email || '',
+                    displayName: user.displayName || parsed?.firstName || '',
+                };
+                saveUserProfile(user.uid, profile);
+            } catch (e) {
+                console.error('Failed to save user profile', e);
+            }
             initApp();
         }
     });
@@ -26,6 +38,7 @@ async function initApp() {
     hydratePreferencesFromStorage();
     renderFeatureCards();
     renderEssentialItems();
+    await fetchAndRenderProfile();
     
     // Only load products if user is authenticated
     const currentUser = localStorage.getItem('currentUser');
@@ -44,13 +57,14 @@ function checkAuthentication() {
     const userName = document.getElementById('userName');
     const welcomeSection = document.getElementById('welcomeSection');
     const authRequiredElements = document.querySelectorAll('.auth-required');
+    const profileSection = document.getElementById('profile');
     
     if (currentUser) {
         // User is logged in
         const user = JSON.parse(currentUser);
         if (loginBtn) loginBtn.style.display = 'none';
         if (userMenu) userMenu.style.display = 'flex';
-        if (userName) userName.textContent = `Welcome, ${user.firstName || user.email}`;
+        if (userName) userName.textContent = `Welcome, ${user.firstName || user.displayName || user.email}`;
         if (welcomeSection) welcomeSection.style.display = 'none';
         
         // Show authenticated content
@@ -69,6 +83,7 @@ function checkAuthentication() {
         authRequiredElements.forEach(el => {
             el.style.display = 'none';
         });
+        if (profileSection) profileSection.style.display = 'none';
     }
 }
 
@@ -428,7 +443,7 @@ function handleLogout() {
 
 function navigateToSection(sectionId) {
     // Hide all main sections
-    const sections = ['home', 'personalize', 'featuresBar', 'recommendations', 'analytics', 'search'];
+    const sections = ['home', 'personalize', 'featuresBar', 'recommendations', 'analytics', 'search', 'profile'];
     sections.forEach(id => {
         const section = document.getElementById(id);
         if (section) {
@@ -474,9 +489,59 @@ function navigateToSection(sectionId) {
                 showSearchResultsHeader(true);
             }
         }
+
+        // Profile section visibility: show only on home and profile pages
+        const profileSection = document.getElementById('profile');
+        if (profileSection) {
+            if (targetSection === 'home' || targetSection === 'profile') {
+                profileSection.style.display = '';
+                // Refresh profile data upon showing
+                fetchAndRenderProfile();
+            } else {
+                profileSection.style.display = 'none';
+            }
+        }
         
         // Scroll to section
         sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+async function fetchAndRenderProfile() {
+    try {
+        const uid = window.CURRENT_USER?.uid;
+        if (!uid) return;
+        // Try Firestore profile first; fallback to auth object/localStorage
+        let profile = await getUserProfile(uid);
+        if (!profile) {
+            const stored = localStorage.getItem('currentUser');
+            if (stored) {
+                const user = JSON.parse(stored);
+                profile = { displayName: user.firstName || user.displayName || '', email: user.email || '' };
+            } else if (window.CURRENT_USER) {
+                profile = { displayName: window.CURRENT_USER.displayName || '', email: window.CURRENT_USER.email || '' };
+            }
+        }
+
+        // Derive a friendly name if displayName is missing
+        const deriveName = (p) => {
+            const raw = p?.displayName || '';
+            if (raw && raw.trim()) return raw;
+            const email = p?.email || '';
+            const base = email.includes('@') ? email.split('@')[0] : '';
+            // Title-case the base (split on non-alphanumerics)
+            const parts = base.split(/[^a-zA-Z0-9]+/).filter(Boolean);
+            const title = parts.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+            return title || '';
+        };
+
+        const friendlyName = deriveName(profile);
+        const nameEl = document.getElementById('profileName');
+        const emailEl = document.getElementById('profileEmail');
+        if (nameEl) nameEl.textContent = friendlyName || '—';
+        if (emailEl) emailEl.textContent = profile?.email || '—';
+    } catch (e) {
+        console.error('Failed to fetch/render profile info', e);
     }
 }
 
