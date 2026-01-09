@@ -3,6 +3,7 @@ export const state = {
     filteredProducts: [],
     categories: [],
     preferences: null,
+    recommendationSavings: 0,
     filters: {
         search: '',
         category: '',
@@ -28,6 +29,11 @@ export function setCategories(categories) {
 
 export function setPreferences(preferences) {
     state.preferences = preferences;
+}
+
+export function setRecommendationSavings(amount) {
+    const n = Number(amount) || 0;
+    state.recommendationSavings = n;
 }
 
 export function setFilters(nextFilters) {
@@ -63,7 +69,9 @@ export function clearQuantities() {
 export function getMetrics() {
     const deals = state.products.length;
     const categories = state.categories.length;
-    const avgSavings = computeAvgSavings(state.products);
+    const avgSavings = state.recommendationSavings > 0
+        ? Math.round(state.recommendationSavings)
+        : computeAvgSavings(state.products);
     return { deals, categories, avgSavings };
 }
 

@@ -1,5 +1,5 @@
 import { fetchProducts, fetchRecommendations, fetchAnalytics } from './api.js';
-import { state, setProducts, setFilteredProducts, setCategories, setPreferences, setFilters, getMetrics, setActiveFeature, getActiveFeature, setProductQuantity, getProductQuantity } from './state.js';
+import { state, setProducts, setFilteredProducts, setCategories, setPreferences, setFilters, getMetrics, setActiveFeature, getActiveFeature, setProductQuantity, getProductQuantity, setRecommendationSavings } from './state.js';
 import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards, renderRecommendationSummary } from './ui.js';
 import { filterProducts } from './filters.js';
 import { savePreferences, loadPreferences, loadEssentialItems, addEssentialItem, removeEssentialItem } from './storage.js';
@@ -310,6 +310,7 @@ async function handleRecommendations() {
         
         // Update state with recommended products
         setFilteredProducts(recommendationResult.products);
+        setRecommendationSavings(recommendationResult.totalSavings);
         
         // Render products and summary
         renderProducts(recommendationResult.products, 'recommendationsGrid');
