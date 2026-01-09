@@ -283,23 +283,13 @@ function wireEvents() {
 // ============= Deals Management =============
 
 async function loadDealsData() {
-  console.log('[Admin] Loading deals from Firebase...');
-  try {
-    const deals = await getDeals();
-    currentDeals = Array.isArray(deals) ? deals : [];
-    console.log('[Admin] Fetched', currentDeals.length, 'deals');
-    
-    const tbody = document.getElementById('dealsTableBody');
-    if (!tbody) {
-      console.error('[Admin] Deals table body element not found');
-      return;
-    }
-    
-    if (currentDeals.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="padding: 1.5rem; text-align: center; color: var(--text-soft);">No deals found. Click "Add Deal" to create one.</td></tr>';
-      return;
-    }
-    
+  const deals = await getDeals();
+  currentDeals = Array.isArray(deals) ? deals : [];
+  
+  const tbody = document.getElementById('dealsTableBody');
+  if (currentDeals.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding: 1.5rem; text-align: center; color: var(--text-soft);">No deals found. Click "Add Deal" to create one.</td></tr>';
+  } else {
     tbody.innerHTML = currentDeals.map(deal => {
       const statusColors = {
         active: 'background: rgba(46,213,115,.15); color:#2ecc71;',
@@ -345,14 +335,6 @@ async function loadDealsData() {
         </tr>
       `;
     }).join('');
-    console.log('[Admin] Rendered', currentDeals.length, 'deals in table');
-  } catch (error) {
-    console.error('[Admin] Error loading deals:', error);
-    const tbody = document.getElementById('dealsTableBody');
-    if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="6" style="padding: 1.5rem; text-align: center; color: #e74c3c;">Failed to load deals: ${error.message}</td></tr>`;
-    }
-    throw error;
   }
 }
 
