@@ -193,40 +193,72 @@
                         <input type="number" id="pastSpend" name="pastSpend" placeholder="9500" min="0" step="100" required>
                         <small class="micro">We use this to calibrate savings suggestions.</small>
                     </label>
-                    <div class="field span-2">
-                        <span>Essential item priority</span>
-                        <div class="inline-options">
-                            <label class="chip-input">
-                                <input type="radio" name="essentialPriority" value="yes" checked>
-                                <span>Prioritize essentials</span>
-                            </label>
-                            <label class="chip-input">
-                                <input type="radio" name="essentialPriority" value="no">
-                                <span>Show all deals</span>
-                            </label>
-                        </div>
-                    </div>
+                    
                     <div class="field span-2">
                         <span>Add Essential Items</span>
                         <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
                             <select id="essentialItemSelect" style="flex: 1; min-width: 200px; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text);">
                                 <option value="">Select an essential item</option>
-                                <option value="Rice">Rice</option>
-                                <option value="Milk">Milk</option>
-                                <option value="Bread">Bread</option>
-                                <option value="Apple">Apple</option>
-                                <option value="Banana">Banana</option>
-                                <option value="Potato">Potato</option>
-                                <option value="Tomato">Tomato</option>
-                                <option value="Onion">Onion</option>
-                                <option value="Mango">Mango</option>
-                                <option value="Orange">Orange</option>
-                                <option value="Detergent">Detergent</option>
-                                <option value="Shampoo">Shampoo</option>
-                                <option value="Chips">Chips</option>
-                                <option value="Biscuits">Biscuits</option>
-                                <option value="Cold Drink">Cold Drink</option>
-                                <option value="others">Others</option>
+                                <optgroup label="Grains & Cereals">
+                                    <option value="Basmati Rice">Basmati Rice</option>
+                                    <option value="Wheat Flour">Wheat Flour</option>
+                                    <option value="Oats">Oats</option>
+                                    <option value="Cornflakes">Cornflakes</option>
+                                    <option value="Poha">Poha</option>
+                                </optgroup>
+                                <optgroup label="Cooking Oils">
+                                    <option value="Rice Bran Oil">Rice Bran Oil</option>
+                                    <option value="Sunflower Oil">Sunflower Oil</option>
+                                    <option value="Groundnut Oil">Groundnut Oil</option>
+                                </optgroup>
+                                <optgroup label="Pulses">
+                                    <option value="Toor Dal">Toor Dal</option>
+                                    <option value="Moong Dal">Moong Dal</option>
+                                    <option value="Chana Dal">Chana Dal</option>
+                                </optgroup>
+                                <optgroup label="Essentials">
+                                    <option value="Sugar">Sugar</option>
+                                    <option value="Salt">Salt</option>
+                                    <option value="Cooking Soda">Cooking Soda</option>
+                                </optgroup>
+                                <optgroup label="Dairy">
+                                    <option value="Milk">Milk</option>
+                                    <option value="Curd">Curd</option>
+                                </optgroup>
+                                <optgroup label="Bakery">
+                                    <option value="Bread">Bread</option>
+                                    <option value="Brown Bread">Brown Bread</option>
+                                </optgroup>
+                                <optgroup label="Protein">
+                                    <option value="Eggs">Eggs</option>
+                                </optgroup>
+                                <optgroup label="Vegetables">
+                                    <option value="Potato">Potato</option>
+                                    <option value="Onion">Onion</option>
+                                    <option value="Tomato">Tomato</option>
+                                    <option value="Carrot">Carrot</option>
+                                    <option value="Cabbage">Cabbage</option>
+                                    <option value="Cauliflower">Cauliflower</option>
+                                </optgroup>
+                                <optgroup label="Spices">
+                                    <option value="Turmeric Powder">Turmeric Powder</option>
+                                    <option value="Red Chilli Powder">Red Chilli Powder</option>
+                                    <option value="Coriander Powder">Coriander Powder</option>
+                                </optgroup>
+                                <optgroup label="Household">
+                                    <option value="Dishwash Liquid">Dishwash Liquid</option>
+                                    <option value="Detergent Powder">Detergent Powder</option>
+                                    <option value="Bath Soap">Bath Soap</option>
+                                    <option value="Toothpaste">Toothpaste</option>
+                                    <option value="Toothbrush">Toothbrush</option>
+                                </optgroup>
+                                <optgroup label="Personal Care">
+                                    <option value="Hand Sanitizer">Hand Sanitizer</option>
+                                </optgroup>
+                                <optgroup label="Kitchen">
+                                    <option value="Cooking Gas Lighter">Cooking Gas Lighter</option>
+                                </optgroup>
+                                <option value="others">Others (Custom)</option>
                             </select>
                             <input type="text" id="customEssentialItemInput" placeholder="Enter custom item name" style="display: none; flex: 1; min-width: 200px; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text);">
                             <button type="button" id="addEssentialItemBtn" class="btn btn-secondary">Add to List</button>

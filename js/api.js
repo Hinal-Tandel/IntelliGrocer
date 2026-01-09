@@ -9,13 +9,19 @@ export async function fetchProducts() {
 export async function fetchRecommendations(preferences) {
     const products = await fsGetProducts();
     let recs = Array.isArray(products) ? [...products] : [];
+    
+    // Filter by monthly budget
     if (preferences?.monthlyBudget) {
         // Prefer items with discounted_price within budget window
         recs = recs.filter(p => (p.discounted_price ?? p.price ?? 0) <= preferences.monthlyBudget);
     }
+    
+    // Prioritize essentials if user has selected that option
     if (preferences?.essentialPriority === 'yes') {
-        recs = recs.filter(p => (p.is_essential ?? false));
+        // Filter to only show essential items
+        recs = recs.filter(p => p.is_essential === true || p.is_essential === 'true');
     }
+    
     // Sort by discount percent descending if available
     recs.sort((a, b) => {
         const ad = parseInt(String(a.discount || '').replace(/[^0-9]/g, ''), 10) || 0;

@@ -86,3 +86,14 @@ export async function getAnalytics() {
   const snap = await getDoc(doc(db, 'analytics', 'latest'));
   return snap.exists() ? snap.data() : {};
 }
+
+// Essential items for a user
+export async function saveEssentialItems(uid, items) {
+  await setDoc(doc(db, 'users', uid), { essentialItems: items }, { merge: true });
+}
+
+export async function getEssentialItems(uid) {
+  const snap = await getDoc(doc(db, 'users', uid));
+  const data = snap.exists() ? snap.data() : {};
+  return data.essentialItems ?? [];
+}

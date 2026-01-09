@@ -404,7 +404,7 @@ function handleEssentialItemSelectChange() {
     }
 }
 
-function handleAddEssentialItem() {
+async function handleAddEssentialItem() {
     const select = document.getElementById('essentialItemSelect');
     const customInput = document.getElementById('customEssentialItemInput');
     let itemToAdd = '';
@@ -424,8 +424,8 @@ function handleAddEssentialItem() {
         }
     }
     
-    const items = addEssentialItem(itemToAdd);
-    renderEssentialItems();
+    await addEssentialItem(itemToAdd);
+    await renderEssentialItems();
     showToast(`${itemToAdd} added to essential items.`, 'success');
     
     // Reset select and input
@@ -436,8 +436,8 @@ function handleAddEssentialItem() {
     }
 }
 
-function renderEssentialItems() {
-    const items = loadEssentialItems();
+async function renderEssentialItems() {
+    const items = await loadEssentialItems();
     const container = document.getElementById('essentialItemsListContainer');
     const listElement = document.getElementById('essentialItemsList');
     
@@ -462,9 +462,9 @@ function renderEssentialItems() {
     `).join('');
 }
 
-function handleRemoveEssentialItem(item) {
-    removeEssentialItem(item);
-    renderEssentialItems();
+async function handleRemoveEssentialItem(item) {
+    await removeEssentialItem(item);
+    await renderEssentialItems();
     showToast(`${item} removed from essential items.`, 'info');
 }
 
