@@ -24,8 +24,10 @@ function guardRole() {
 
 async function loadData() {
   try {
+    console.log('[Admin] Loading products from Firebase...');
     const list = await getProducts();
     const products = Array.isArray(list) ? list : [];
+    console.log('[Admin] Fetched', products.length, 'products');
     currentProducts = products;
 
     // Stats
@@ -197,19 +199,25 @@ async function handleProductSubmit(e) {
     is_essential: document.getElementById('productEssential').checked
   };
   
+  console.log('[Admin] Saving product', productId ? '(update)' : '(new)', productData);
   try {
     if (productId) {
       // Update existing
+      console.log('[Admin] Updating product ID:', productId);
       await updateProduct(productId, productData);
       showToast('Product updated successfully!', 'success');
     } else {
       // Add new
-      await addProduct(productData);
+      console.log('[Admin] Adding new product');
+      const newId = await addProduct(productData);
+      console.log('[Admin] Product added with ID:', newId);
       showToast('Product added successfully!', 'success');
     }
     
     closeModal();
+    console.log('[Admin] Reloading product table...');
     await loadData();
+    console.log('[Admin] Product table reloaded');
   } catch (error) {
     console.error('Save error:', error);
     showToast('Failed to save product: ' + error.message, 'error');

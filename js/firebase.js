@@ -245,12 +245,22 @@ export async function getUserProfile(uid) {
 // Admin: CRUD operations for products
 export async function addProduct(productData) {
   const productsRef = collection(db, 'products');
+  const original = Number(productData.original_price) || 0;
+  const discounted = Number(productData.discounted_price) || 0;
+  const pct = original > 0 ? Math.round(((original - discounted) / original) * 100) : 0;
+  const discountStr = (productData.discount && productData.discount.trim()) ? productData.discount : (pct > 0 ? `${pct}%` : '');
+  const uid = (auth && auth.currentUser) ? auth.currentUser.uid : null;
+
   const docRef = await addDoc(productsRef, {
     ...productData,
+    original_price: original,
+    discounted_price: discounted,
+    discount: discountStr,
     name_lower: (productData.name || '').toLowerCase(),
     category_lower: (productData.category || '').toLowerCase(),
     search_tokens: generateSearchTokens(productData.name),
     search_score: 100,
+    created_by: uid,
     created_at: Date.now(),
     updated_at: Date.now()
   });
@@ -259,8 +269,16 @@ export async function addProduct(productData) {
 
 export async function updateProduct(productId, productData) {
   const productRef = doc(db, 'products', productId);
+  const original = Number(productData.original_price) || 0;
+  const discounted = Number(productData.discounted_price) || 0;
+  const pct = original > 0 ? Math.round(((original - discounted) / original) * 100) : 0;
+  const discountStr = (productData.discount && productData.discount.trim()) ? productData.discount : (pct > 0 ? `${pct}%` : '');
+
   await setDoc(productRef, {
     ...productData,
+    original_price: original,
+    discounted_price: discounted,
+    discount: discountStr,
     name_lower: (productData.name || '').toLowerCase(),
     category_lower: (productData.category || '').toLowerCase(),
     search_tokens: generateSearchTokens(productData.name),
