@@ -4,8 +4,20 @@ import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPre
 import { filterProducts } from './filters.js';
 import { savePreferences, loadPreferences } from './storage.js';
 import { scrollToAnchor } from './utils.js';
+import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations } from './firebase.js';
 
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', ensureAuthThenInit);
+
+function ensureAuthThenInit() {
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            window.location.href = 'login.html';
+        } else {
+            window.CURRENT_USER = user;
+            initApp();
+        }
+    });
+}
 
 async function initApp() {
     bindEvents();
@@ -147,6 +159,9 @@ async function handleRecommendations() {
         setFilteredProducts(data.recommendations || []);
         renderProducts(state.filteredProducts);
         renderMetrics(getMetrics());
+        if (window.CURRENT_USER?.uid) {
+            try { await saveRecommendations(window.CURRENT_USER.uid, state.filteredProducts); } catch (e) { console.error('Failed to save recommendations to Firestore', e); }
+        }
         showToast('Personalized recommendations updated.', 'success');
         scrollToAnchor('#recommendations');
     } catch (error) {
@@ -192,6 +207,9 @@ async function handlePreferencesSubmit(event) {
 
     setPreferences(preferences);
     savePreferences(preferences);
+    if (window.CURRENT_USER?.uid) {
+        try { await saveUserPreferences(window.CURRENT_USER.uid, preferences); } catch (e) { console.error('Failed to save preferences to Firestore', e); }
+    }
     renderPreferencesChips(preferences);
     showToast('Preferences saved.', 'success');
     return preferences;

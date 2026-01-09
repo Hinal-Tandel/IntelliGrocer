@@ -1,27 +1,32 @@
-const API_BASE_URL = 'http://localhost:5000';
-
-async function request(path, options = {}) {
-    const response = await fetch(`${API_BASE_URL}${path}`, options);
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || 'Request failed');
-    }
-    return response.json();
-}
+import { getProducts as fsGetProducts, getRecommendations as fsGetRecommendations, getAnalytics as fsGetAnalytics } from './firebase.js';
 
 export async function fetchProducts() {
-    return request('/api/products');
+    const products = await fsGetProducts();
+    return { products };
 }
 
+// Basic client-side recommendation: prioritize higher discounts, filter by preferences if provided
 export async function fetchRecommendations(preferences) {
-    const body = preferences ? { preferences } : {};
-    return request('/api/recommendations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+    const products = await fsGetProducts();
+    let recs = Array.isArray(products) ? [...products] : [];
+    if (preferences?.monthlyBudget) {
+        // Prefer items with discounted_price within budget window
+        recs = recs.filter(p => (p.discounted_price ?? p.price ?? 0) <= preferences.monthlyBudget);
+    }
+    if (preferences?.essentialPriority === 'yes') {
+        recs = recs.filter(p => (p.is_essential ?? false));
+    }
+    // Sort by discount percent descending if available
+    recs.sort((a, b) => {
+        const ad = parseInt(String(a.discount || '').replace(/[^0-9]/g, ''), 10) || 0;
+        const bd = parseInt(String(b.discount || '').replace(/[^0-9]/g, ''), 10) || 0;
+        return bd - ad;
     });
+
+    return { recommendations: recs.slice(0, 50) };
 }
 
 export async function fetchAnalytics() {
-    return request('/api/analytics');
+    const data = await fsGetAnalytics();
+    return data;
 }

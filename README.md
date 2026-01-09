@@ -75,11 +75,52 @@ IntelliGrocer/
 │   ├── main.js                   # Application initialization & event handling
 │   ├── state.js                  # Application state management
 │   ├── ui.js                     # UI rendering functions
-│   ├── api.js                    # API communication layer
+│   ├── api.js                    # Data layer (now backed by Firebase Firestore)
 │   ├── filters.js                # Product filtering logic
 │   ├── storage.js                # Local storage management
 │   └── utils.js                  # Utility functions
 └── (Python backend server files)
+## Firebase Setup (Frontend Auth + Firestore)
+
+This project can run purely in the browser using Firebase for authentication and data storage.
+
+1. Create a Firebase project at https://console.firebase.google.com
+2. Enable Authentication (Email/Password, optionally Google) in the Firebase Console.
+3. Create a Firestore database (in production or test mode).
+4. Copy `js/firebase-config.example.js` to `js/firebase-config.js` and replace values with your project's config.
+5. Set up Firestore collections:
+    - `products` (documents representing grocery items)
+       - Example fields: `name` (string), `category` (string), `quantity` (string), `original_price` (number), `discounted_price` (number), `discount` (string like "25%"), `is_essential` (boolean)
+    - `analytics/latest` (optional doc with base64 chart images)
+       - Fields: `category_chart`, `price_discount_chart`, `top_deals_chart` (base64 PNG strings)
+    - Per-user data is stored under `users/{uid}`:
+       - `profile` (firstName, lastName, email)
+       - `preferences` (the saved preferences from the form)
+       - `budget` (optional budget object)
+       - `recommendations/latest` (doc with `{ items: [...], ts }`)
+
+6. Recommended Firestore security rules (adjust to your needs):
+
+```
+rules_version = '2';
+service cloud.firestore {
+   match /databases/{database}/documents {
+      match /products/{doc} { allow read: if true; allow write: if false; }
+      match /analytics/{doc} { allow read: if true; allow write: if false; }
+      match /users/{userId} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+         match /{document=**} { allow read, write: if request.auth != null && request.auth.uid == userId; }
+      }
+   }
+}
+```
+
+7. Open `login.html` to sign in, then `index.html` will load your data from Firestore.
+
+Notes:
+- `js/api.js` now fetches data from Firestore and computes simple client-side recommendations.
+- Preferences and recommendations are saved to Firestore for the signed-in user.
+
 ```
 
 ## Usage

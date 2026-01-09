@@ -1,0 +1,55 @@
+name,category,quantity,original_price,discounted_price,discount,is_essential
+Basmati Rice,Grains,5 kg,650,520,20%,true
+Wheat Flour,Grains,5 kg,280,250,11%,true
+Rice Bran Oil,Cooking,1 L,190,165,13%,true
+Sunflower Oil,Cooking,1 L,210,180,14%,true
+Groundnut Oil,Cooking,1 L,230,200,13%,true
+Toor Dal,Pulses,1 kg,180,150,17%,true
+Moong Dal,Pulses,1 kg,160,140,12%,true
+Chana Dal,Pulses,1 kg,120,105,13%,true
+Sugar,Essentials,2 kg,90,80,11%,true
+Salt,Essentials,1 kg,25,20,20%,true
+Milk,Dairy,1 L,60,55,8%,true
+Curd,Dairy,500 g,45,40,11%,true
+Paneer,Dairy,200 g,110,95,14%,false
+Butter,Dairy,200 g,120,100,17%,false
+Cheese,Dairy,200 g,150,130,13%,false
+Bread,Bakery,400 g,45,40,11%,true
+Brown Bread,Bakery,400 g,55,48,13%,true
+Eggs,Protein,12 pcs,85,75,12%,true
+Chicken Breast,Protein,500 g,240,220,8%,false
+Potato,Vegetables,1 kg,35,30,14%,true
+Onion,Vegetables,1 kg,40,35,12%,true
+Tomato,Vegetables,1 kg,30,25,17%,true
+Carrot,Vegetables,500 g,35,30,14%,true
+Cabbage,Vegetables,1 pc,30,25,17%,true
+Cauliflower,Vegetables,1 pc,45,38,16%,true
+Apple,Fruits,1 kg,180,160,11%,false
+Banana,Fruits,1 dozen,60,50,17%,false
+Orange,Fruits,1 kg,90,80,11%,false
+Tea Powder,Beverages,250 g,140,120,14%,false
+Coffee,Beverages,100 g,160,140,13%,false
+Green Tea,Beverages,100 g,130,115,12%,false
+Biscuits,Snacks,200 g,40,30,25%,false
+Namkeen,Snacks,250 g,90,75,17%,false
+Chips,Snacks,100 g,50,40,20%,false
+Chocolate,Snacks,100 g,80,70,13%,false
+Oats,Cereals,500 g,140,120,14%,true
+Cornflakes,Cereals,500 g,160,135,16%,true
+Poha,Cereals,1 kg,70,60,14%,true
+Cooking Soda,Essentials,100 g,30,25,17%,true
+Turmeric Powder,Spices,100 g,40,35,12%,true
+Red Chilli Powder,Spices,100 g,55,48,13%,true
+Coriander Powder,Spices,100 g,45,40,11%,true
+Garam Masala,Spices,50 g,60,52,13%,false
+Dishwash Liquid,Household,500 ml,110,95,14%,true
+Detergent Powder,Household,1 kg,130,115,12%,true
+Bath Soap,Household,4 pcs,120,100,17%,true
+Shampoo,Household,200 ml,180,155,14%,false
+Toothpaste,Household,200 g,95,85,11%,true
+Toothbrush,Household,2 pcs,60,50,17%,true
+Paper Towels,Household,2 rolls,90,80,11%,false
+Face Wash,Personal Care,150 ml,160,140,13%,false
+Hand Sanitizer,Personal Care,200 ml,120,105,13%,true
+Cooking Gas Lighter,Kitchen,1 pc,70,60,14%,true
+Aluminium Foil,Kitchen,1 roll,110,95,14%,false

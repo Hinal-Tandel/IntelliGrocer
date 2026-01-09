@@ -307,16 +307,13 @@
                 <h1>IntelliGrocer</h1>
                 <p>Your smart grocery companion. Get personalized recommendations and make shopping easier than ever.</p>
             </div>
-            
             <div class="login-right">
                 <div class="login-header">
-                    <h2>Welcome Back!</h2>
-                    <p>Please login to your account</p>
+                    <h2>Welcome Back</h2>
+                    <p>Login to your account to continue</p>
                 </div>
 
-                <div class="error-message" id="errorMessage">
-                    Invalid email or password. Please try again.
-                </div>
+                <div class="error-message" id="errorMessage"></div>
 
                 <form id="loginForm">
                     <div class="form-group">
@@ -325,9 +322,9 @@
                             type="email" 
                             id="email" 
                             class="form-input" 
-                            placeholder="you@example.com"
+                            placeholder="Enter your email"
                             required
-                        >
+                        />
                     </div>
 
                     <div class="form-group">
@@ -339,7 +336,7 @@
                                 class="form-input" 
                                 placeholder="Enter your password"
                                 required
-                            >
+                            />
                             <button type="button" class="toggle-password" id="togglePassword">
                                 👁️
                             </button>
@@ -348,7 +345,7 @@
 
                     <div class="form-options">
                         <div class="remember-me">
-                            <input type="checkbox" id="remember">
+                            <input type="checkbox" id="remember" />
                             <label for="remember">Remember me</label>
                         </div>
                         <a href="#" class="forgot-password">Forgot Password?</a>
@@ -374,11 +371,13 @@
         </div>
     </div>
 
-    <script>
+    <script src="./js/firebase-config.js"></script>
+    <script type="module">
+        import { auth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from './js/firebase.js';
+
         // Toggle password visibility
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
-
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
@@ -388,52 +387,39 @@
         // Form submission
         const loginForm = document.getElementById('loginForm');
         const errorMessage = document.getElementById('errorMessage');
+        const emailInput = document.getElementById('email');
+        const rememberInput = document.getElementById('remember');
 
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            // Demo account
-            if (email === 'demo@intelligrocer.com' && password === 'demo123') {
-                localStorage.setItem('currentUser', JSON.stringify({
-                    firstName: 'Demo',
-                    lastName: 'User',
-                    email: email
-                }));
+            errorMessage.classList.remove('show');
+            try {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                await signInWithEmailAndPassword(auth, email, password);
                 window.location.href = 'index.html';
-                return;
-            }
-
-            // Check against registered users in localStorage
-            const users = JSON.parse(localStorage.getItem('intelligrocerUsers') || '[]');
-            const user = users.find(u => u.email === email && u.password === password);
-
-            if (user) {
-                // Successful login
-                localStorage.setItem('currentUser', JSON.stringify({
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email: user.email
-                }));
-                window.location.href = 'index.html';
-            } else {
-                // Show error message
+            } catch (err) {
+                errorMessage.textContent = err?.message || 'Invalid email or password. Please try again.';
                 errorMessage.classList.add('show');
-                setTimeout(() => {
-                    errorMessage.classList.remove('show');
-                }, 3000);
             }
         });
 
-        // Social login handlers
-        const socialBtns = document.querySelectorAll('.social-btn');
-        socialBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                alert('Social login will be implemented here');
+        // Social login: Google
+        const googleBtn = document.querySelector('.social-login .social-btn[title="Login with Google"]');
+        if (googleBtn) {
+            const provider = new GoogleAuthProvider();
+            googleBtn.addEventListener('click', async () => {
+                errorMessage.classList.remove('show');
+                try {
+                    await signInWithPopup(auth, provider);
+                    window.location.href = 'index.html';
+                } catch (err) {
+                    errorMessage.textContent = err?.message || 'Google sign-in failed.';
+                    errorMessage.classList.add('show');
+                }
             });
-        });
+        }
     </script>
+
 </body>
 </html>
