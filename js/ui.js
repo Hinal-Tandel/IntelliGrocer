@@ -46,6 +46,233 @@ function createProductCard(product, index) {
     `;
 }
 
+export function renderReports(reports) {
+    const noReportsMessage = document.getElementById('noReportsMessage');
+    const reportsList = document.getElementById('reportsList');
+    const reportCount = document.getElementById('profileReportCount');
+    
+    if (reportCount) {
+        reportCount.textContent = reports.length;
+    }
+    
+    if (!reports || reports.length === 0) {
+        if (noReportsMessage) noReportsMessage.style.display = 'block';
+        if (reportsList) reportsList.style.display = 'none';
+        return;
+    }
+    
+    if (noReportsMessage) noReportsMessage.style.display = 'none';
+    if (reportsList) {
+        reportsList.style.display = 'grid';
+        reportsList.innerHTML = reports.map(report => createReportCard(report)).join('');
+    }
+}
+
+function createReportCard(report) {
+    const date = new Date(report.timestamp).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    return `
+        <div class="report-card panel-card" data-report-id="${report.id}">
+            <div class="report-header">
+                <h4>📊 Report - ${date}</h4>
+                <span class="pill">${report.summary.totalProducts} products</span>
+            </div>
+            <div class="report-stats" style="margin: 1rem 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
+                <div>
+                    <strong>Budget:</strong> ₹${report.preferences.monthlyBudget}
+                </div>
+                <div>
+                    <strong>Used:</strong> ${report.summary.budgetUtilization}%
+                </div>
+                <div>
+                    <strong>Total Cost:</strong> ₹${report.summary.totalCost.toFixed(2)}
+                </div>
+                <div class="savings-highlight">
+                    <strong>Savings:</strong> ₹${report.summary.totalSavings.toFixed(2)}
+                </div>
+            </div>
+            <div class="report-actions" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button class="btn btn-secondary btn-sm view-report-btn" data-report-id="${report.id}">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                <div class="dropdown" style="position: relative; flex: 1;">
+                    <button class="btn btn-ghost btn-sm download-toggle-btn" data-report-id="${report.id}" style="width: 100%;">
+                        <i class="fas fa-download"></i> Download ▾
+                    </button>
+                    <div class="download-menu" data-report-id="${report.id}" style="display: none; position: absolute; bottom: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 0.25rem; z-index: 10;">
+                        <button class="download-format-btn" data-report-id="${report.id}" data-format="html" style="width: 100%; padding: 0.5rem; border: none; background: none; cursor: pointer; text-align: left; transition: background 0.2s;">
+                            <i class="fas fa-file-code"></i> HTML
+                        </button>
+                        <button class="download-format-btn" data-report-id="${report.id}" data-format="pdf" style="width: 100%; padding: 0.5rem; border: none; background: none; cursor: pointer; text-align: left; transition: background 0.2s;">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="download-format-btn" data-report-id="${report.id}" data-format="word" style="width: 100%; padding: 0.5rem; border: none; background: none; cursor: pointer; text-align: left; transition: background 0.2s;">
+                            <i class="fas fa-file-word"></i> Word
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+export function renderProfileInfo(user, reportCount = 0) {
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+    const profileReportCount = document.getElementById('profileReportCount');
+    
+    if (profileName) {
+        profileName.textContent = user.firstName || user.displayName || 'User';
+    }
+    if (profileEmail) {
+        profileEmail.textContent = user.email || '—';
+    }
+    if (profileReportCount) {
+        profileReportCount.textContent = reportCount;
+    }
+}
+
+export function showReportModal(report) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('reportViewModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'reportViewModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 900px;">
+                <button class="close" id="reportModalClose" aria-label="Close">✕</button>
+                <div id="reportModalBody" style="padding: 2rem; max-height: calc(90vh - 4rem); overflow-y: auto;"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        document.getElementById('reportModalClose').addEventListener('click', () => {
+            modal.classList.add('is-hidden');
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'reportViewModal') {
+                modal.classList.add('is-hidden');
+            }
+        });
+    }
+    
+    const modalBody = document.getElementById('reportModalBody');
+    
+    const categoriesHTML = Object.entries(report.categoryBreakdown)
+        .sort((a, b) => b[1].totalCost - a[1].totalCost)
+        .map(([category, data]) => `
+            <tr>
+                <td>${category}</td>
+                <td>${data.count}</td>
+                <td>₹${data.totalCost.toFixed(2)}</td>
+                <td class="savings-highlight">₹${data.totalSavings.toFixed(2)}</td>
+            </tr>
+        `).join('');
+    
+    const productsHTML = report.products.map((product, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td>${product.quantity || '-'}</td>
+            <td>₹${product.originalPrice.toFixed(2)}</td>
+            <td>₹${product.discountedPrice.toFixed(2)}</td>
+            <td>${product.discount || '-'}</td>
+            <td>${product.isEssential ? '✓' : ''}</td>
+        </tr>
+    `).join('');
+    
+    modalBody.innerHTML = `
+        <h2>📊 Recommendation Report</h2>
+        <p class="micro">Generated on ${report.reportDate}</p>
+        
+        <div style="margin: 2rem 0;">
+            <h3>Summary</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div class="panel-card">
+                    <p class="eyebrow">Products</p>
+                    <h4>${report.summary.totalProducts}</h4>
+                </div>
+                <div class="panel-card">
+                    <p class="eyebrow">Total Cost</p>
+                    <h4>₹${report.summary.totalCost.toFixed(2)}</h4>
+                </div>
+                <div class="panel-card" style="border-left: 3px solid var(--accent);">
+                    <p class="eyebrow">Savings</p>
+                    <h4 class="savings-highlight">₹${report.summary.totalSavings.toFixed(2)}</h4>
+                </div>
+                <div class="panel-card">
+                    <p class="eyebrow">Budget Used</p>
+                    <h4>${report.summary.budgetUtilization}%</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin: 2rem 0;">
+            <h3>Category Breakdown</h3>
+            <table class="data-table" style="width: 100%; margin-top: 1rem;">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Products</th>
+                        <th>Total Cost</th>
+                        <th>Savings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${categoriesHTML}
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin: 2rem 0;">
+            <h3>All Recommended Products</h3>
+            <table class="data-table" style="width: 100%; margin-top: 1rem;">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Original</th>
+                        <th>Discounted</th>
+                        <th>Discount</th>
+                        <th>Essential</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${productsHTML}
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 2rem; text-align: center;">
+            <h4 style="margin-bottom: 1rem;">Download Report</h4>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-primary download-format-btn" data-report-id="${report.id}" data-format="html">
+                    <i class="fas fa-file-code"></i> HTML
+                </button>
+                <button class="btn btn-secondary download-format-btn" data-report-id="${report.id}" data-format="pdf">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button class="btn btn-ghost download-format-btn" data-report-id="${report.id}" data-format="word">
+                    <i class="fas fa-file-word"></i> Word
+                </button>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.remove('is-hidden');
+}
+
+
 export function showLoading(show) {
     const loader = document.getElementById('loadingSpinner');
     if (!loader) return;

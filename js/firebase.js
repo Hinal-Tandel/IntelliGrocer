@@ -209,3 +209,34 @@ export async function getEssentialItems(uid) {
   const data = snap.exists() ? snap.data() : {};
   return data.essentialItems ?? [];
 }
+
+// Recommendation reports for a user
+export async function saveRecommendationReport(uid, report) {
+  const reportRef = doc(db, 'users', uid, 'reports', report.id);
+  await setDoc(reportRef, {
+    ...report,
+    createdAt: Date.now()
+  });
+}
+
+export async function getRecommendationReports(uid) {
+  const reportsRef = collection(db, 'users', uid, 'reports');
+  const q = query(reportsRef, orderBy('createdAt', 'desc'), limit(50));
+  const snap = await getDocs(q);
+  const reports = [];
+  snap.forEach(d => reports.push({ id: d.id, ...d.data() }));
+  return reports;
+}
+
+export async function getRecommendationReport(uid, reportId) {
+  const reportRef = doc(db, 'users', uid, 'reports', reportId);
+  const snap = await getDoc(reportRef);
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+export async function getUserProfile(uid) {
+  const snap = await getDoc(doc(db, 'users', uid));
+  const data = snap.exists() ? snap.data() : {};
+  return data.profile ?? null;
+}
+

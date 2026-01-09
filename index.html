@@ -28,6 +28,7 @@
                 <a href="#home" class="nav-link active">Home</a>
                 <a href="#personalize" class="nav-link auth-required">Personalize</a>
                 <a href="#search" class="nav-link auth-required">Search</a>
+                <a href="#profile" class="nav-link auth-required">Profile</a>
             </nav>
             <div id="authButtons">
                 <button id="loginBtn" class="btn btn-pill btn-accent" onclick="window.location.href='login.html'">Login</button>
@@ -415,6 +416,43 @@
                         </div>
                     </div>
                     <div id="searchResultsGrid" class="products-grid"></div>
+                </div>
+            </section>
+
+            <section class="section-card auth-required" id="profile" style="display: none;">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Profile</p>
+                        <h3>My Recommendation Reports</h3>
+                        <p class="lede">View and download your personalized grocery recommendation reports.</p>
+                    </div>
+                    <button class="btn btn-primary" id="generateReportBtn">Generate New Report</button>
+                </div>
+
+                <div id="profileInfo" class="panel-card" style="margin-bottom: 2rem;">
+                    <p class="eyebrow">User Information</p>
+                    <div id="profileDetails" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <div>
+                            <strong>Name:</strong>
+                            <span id="profileName">—</span>
+                        </div>
+                        <div>
+                            <strong>Email:</strong>
+                            <span id="profileEmail">—</span>
+                        </div>
+                        <div>
+                            <strong>Total Reports:</strong>
+                            <span id="profileReportCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="reportsContainer">
+                    <div id="noReportsMessage" class="empty-state">
+                        <h4>No reports yet</h4>
+                        <p>Generate your first recommendation report by clicking the button above.</p>
+                    </div>
+                    <div id="reportsList" class="reports-grid" style="display: none;"></div>
                 </div>
             </section>
 

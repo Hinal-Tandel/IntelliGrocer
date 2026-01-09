@@ -196,7 +196,96 @@ body {
     gap: 0.75rem;
     margin-top: 1rem;
 }
+/* Reports Styles */
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
 
+.report-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.report-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.report-header h4 {
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin: 0;
+}
+
+.report-stats {
+    font-size: 0.9rem;
+}
+
+.report-stats strong {
+    color: var(--text-soft);
+    font-weight: 500;
+}
+
+.savings-highlight {
+    color: var(--success);
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+    background: var(--muted);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table tr:hover {
+    background: var(--bg);
+}
+
+.data-table td {
+    font-size: 0.9rem;
+}
+
+/* Download dropdown menu */
+.download-menu button:hover {
+    background: var(--muted);
+}
+
+.download-dropdown {
+    position: relative;
+}
 .metric {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -559,21 +648,24 @@ body {
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(15,23,42,0.6);
+    background: rgba(15,23,42,0.75);
+    backdrop-filter: blur(4px);
     display: grid;
     place-items: center;
-    padding: 1rem;
-    z-index: 50;
+    z-index: 999;
+    padding: 2rem;
 }
 
 .modal-content {
-    background: #fff;
-    border-radius: 16px;
-    padding: 1.5rem;
-    max-width: 640px;
-    width: min(640px, 90vw);
-    box-shadow: var(--shadow);
+    background: var(--surface);
+    border-radius: var(--radius);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
+    box-shadow: 0 25px 50px rgba(15,23,42,0.3);
 }
 
 .close {
