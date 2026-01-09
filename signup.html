@@ -438,7 +438,10 @@
         </div>
     </div>
 
-    <script>
+    <script src="./js/firebase-config.js"></script>
+    <script type="module">
+        import { auth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from './js/firebase.js';
+
         // Toggle password visibility
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
@@ -499,7 +502,7 @@
         const errorMessage = document.getElementById('errorMessage');
         const submitBtn = document.getElementById('submitBtn');
 
-        signupForm.addEventListener('submit', function(e) {
+        signupForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const firstName = document.getElementById('firstName').value;
@@ -538,49 +541,71 @@
                 return;
             }
 
-            // Create user object
-            const userData = {
-                firstName,
-                lastName,
-                email,
-                password,
-                createdAt: new Date().toISOString()
-            };
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating Account...';
+                
+                // Create user with Firebase
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Save user to localStorage
+                localStorage.setItem('currentUser', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    firstName: firstName,
+                    lastName: lastName
+                }));
 
-            // Get existing users from localStorage or create empty array
-            let users = JSON.parse(localStorage.getItem('intelligrocerUsers') || '[]');
+                // Show success message
+                successMessage.classList.add('show');
 
-            // Check if email already exists
-            if (users.some(user => user.email === email)) {
-                errorMessage.textContent = 'An account with this email already exists!';
+                // Redirect to home page after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                
+            } catch (error) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+                errorMessage.textContent = error.message || 'Failed to create account. Please try again.';
                 errorMessage.classList.add('show');
                 setTimeout(() => {
                     errorMessage.classList.remove('show');
                 }, 3000);
-                return;
             }
-
-            // Add new user to array
-            users.push(userData);
-
-            // Save to localStorage
-            localStorage.setItem('intelligrocerUsers', JSON.stringify(users));
-
-            // Show success message
-            successMessage.classList.add('show');
-            submitBtn.disabled = true;
-
-            // Redirect to login page after 2 seconds
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
         });
 
         // Social signup handlers
-        const socialBtns = document.querySelectorAll('.social-btn');
-        socialBtns.forEach(btn => {
+        const googleBtn = document.querySelector('.social-login .social-btn[title="Sign up with Google"]');
+        if (googleBtn) {
+            const provider = new GoogleAuthProvider();
+            googleBtn.addEventListener('click', async () => {
+                errorMessage.classList.remove('show');
+                try {
+                    const userCredential = await signInWithPopup(auth, provider);
+                    
+                    // Save user to localStorage
+                    const user = userCredential.user;
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        uid: user.uid,
+                        email: user.email,
+                        firstName: user.displayName || user.email.split('@')[0]
+                    }));
+                    
+                    window.location.href = 'index.html';
+                } catch (err) {
+                    errorMessage.textContent = err?.message || 'Google sign-up failed.';
+                    errorMessage.classList.add('show');
+                }
+            });
+        }
+        
+        // Other social buttons
+        const otherSocialBtns = document.querySelectorAll('.social-btn:not([title="Sign up with Google"])');
+        otherSocialBtns.forEach(btn => {
             btn.addEventListener('click', function() {
-                alert('Social signup will be implemented here');
+                alert('This social signup option will be implemented soon');
             });
         });
     </script>

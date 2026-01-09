@@ -417,7 +417,16 @@
             try {
                 const email = emailInput.value.trim();
                 const password = passwordInput.value;
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                
+                // Save user to localStorage
+                const user = userCredential.user;
+                localStorage.setItem('currentUser', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    firstName: user.displayName || user.email.split('@')[0]
+                }));
+                
                 window.location.href = 'index.html';
             } catch (err) {
                 errorMessage.textContent = err?.message || 'Invalid email or password. Please try again.';
@@ -432,7 +441,16 @@
             googleBtn.addEventListener('click', async () => {
                 errorMessage.classList.remove('show');
                 try {
-                    await signInWithPopup(auth, provider);
+                    const userCredential = await signInWithPopup(auth, provider);
+                    
+                    // Save user to localStorage
+                    const user = userCredential.user;
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        uid: user.uid,
+                        email: user.email,
+                        firstName: user.displayName || user.email.split('@')[0]
+                    }));
+                    
                     window.location.href = 'index.html';
                 } catch (err) {
                     errorMessage.textContent = err?.message || 'Google sign-in failed.';
