@@ -4,16 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IntelliGrocer · Smart Grocery Management</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="page-shell">
         <header class="app-bar">
             <div class="brand">
-                <span class="brand-mark">🛒</span>
+                <span class="brand-mark"><i class="fas fa-shopping-cart"></i></span>
                 <div>
                     <p class="eyebrow">IntelliGrocer</p>
                     <h1>Smart Pantry & Deals</h1>
@@ -21,21 +23,78 @@
             </div>
             <nav class="nav">
                 <a href="#home" class="nav-link active">Home</a>
-                <a href="#recommendations" class="nav-link">Recommendations</a>
-                <a href="#analytics" class="nav-link">Analytics</a>
+                <a href="#personalize" class="nav-link auth-required">Personalize</a>
+                <a href="#search" class="nav-link auth-required">Search</a>
             </nav>
-            <button id="getRecommendationsBtn" class="btn btn-pill btn-accent">Get AI Picks</button>
+            <div id="authButtons">
+                <button id="loginBtn" class="btn btn-pill btn-accent" onclick="window.location.href='login.html'">Login</button>
+                <div id="userMenu" class="user-menu" style="display: none;">
+                    <span id="userName" class="user-name"></span>
+                    <button id="logoutBtn" class="btn btn-pill btn-ghost">Logout</button>
+                </div>
+            </div>
         </header>
 
         <main>
-            <section id="home" class="hero">
+            <!-- Welcome Section - Shown before login -->
+            <section id="welcomeSection" class="hero">
+                <div class="hero-copy">
+                    <div class="pill">Grocery intelligence · Live</div>
+                    <h2>Plan smarter, buy better, waste less.</h2>
+                    <p>Modular, AI-assisted grocery planning with live discounts, preference memory, and one-click analytics.</p>
+                    
+                    <div class="features-overview" style="margin-top: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">Key Features</h3>
+                        <div class="feature-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                            <div class="feature-item">
+                                <div class="feature-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">🤖</div>
+                                <h4>AI-Powered Recommendations</h4>
+                                <p>Get personalized grocery suggestions based on your preferences, budget, and household needs.</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">💰</div>
+                                <h4>Smart Budget Management</h4>
+                                <p>Track your spending, find the best deals, and optimize your grocery budget with intelligent insights.</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                                <h4>Analytics & Insights</h4>
+                                <p>Visualize your shopping patterns, category distributions, and savings over time.</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">🌱</div>
+                                <h4>Seasonal Recommendations</h4>
+                                <p>Get suggestions for seasonal produce and items that are fresh and affordable.</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">🔄</div>
+                                <h4>Product Substitutions</h4>
+                                <p>Find cheaper alternatives and substitutes for your favorite products without compromising quality.</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">💪</div>
+                                <h4>Health-Aware Shopping</h4>
+                                <p>Balance nutrition and budget with health-conscious recommendations tailored to your needs.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="hero-actions" style="margin-top: 2rem;">
+                        <button class="btn btn-primary" onclick="window.location.href='login.html'">Get Started - Login</button>
+                        <button class="btn btn-ghost" onclick="window.location.href='signup.html'">Sign Up</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main App Section - Shown after login -->
+            <section id="home" class="hero auth-required" style="display: none;">
                 <div class="hero-copy">
                     <div class="pill">Grocery intelligence · Live</div>
                     <h2>Plan smarter, buy better, waste less.</h2>
                     <p>Modular, AI-assisted grocery planning with live discounts, preference memory, and one-click analytics.</p>
                     <div class="hero-actions">
                         <button id="heroStartBtn" class="btn btn-primary">Start with preferences</button>
-                        <button id="heroBrowseBtn" class="btn btn-ghost">Browse products</button>
+                        <button id="heroBrowseBtn" class="btn btn-ghost">Search products</button>
                     </div>
                     <div class="hero-metrics">
                         <div class="metric">
@@ -71,59 +130,7 @@
                 </div>
             </section>
 
-            <section class="section-card" id="featuresBar">
-                <div class="section-head">
-                    <div>
-                        <p class="eyebrow">AI Features</p>
-                        <h3>Smart recommendation modes</h3>
-                        <p class="lede">Select an AI mode to optimize your grocery recommendations.</p>
-                    </div>
-                </div>
-                <div class="features-carousel" id="featuresCarousel">
-                    <div class="feature-card" data-feature="quantity" title="Smart Quantity Optimization">
-                        <div class="feature-icon">📊</div>
-                        <h4>Quantity</h4>
-                        <p>Suggest optimal quantities within budget</p>
-                    </div>
-                    <div class="feature-card" data-feature="seasonal" title="Seasonal Grocery Intelligence">
-                        <div class="feature-icon">🌱</div>
-                        <h4>Seasonal</h4>
-                        <p>Recommend seasonal & cheaper items</p>
-                    </div>
-                    <div class="feature-card" data-feature="household" title="Household-Aware Recommendations">
-                        <div class="feature-icon">👨‍👩‍👧‍👦</div>
-                        <h4>Household</h4>
-                        <p>Adjust groceries by family size/type</p>
-                    </div>
-                    <div class="feature-card" data-feature="health" title="Health-Aware Budget Optimization">
-                        <div class="feature-icon">💪</div>
-                        <h4>Health</h4>
-                        <p>Balance budget + nutrition</p>
-                    </div>
-                    <div class="feature-card" data-feature="substitute" title="Substitute Product Recommendation">
-                        <div class="feature-icon">🔄</div>
-                        <h4>Substitute</h4>
-                        <p>Suggest cheaper alternatives</p>
-                    </div>
-                    <div class="feature-card" data-feature="savings" title="Savings Score & Monthly Ranking">
-                        <div class="feature-icon">🏆</div>
-                        <h4>Savings Score</h4>
-                        <p>Rank users/months by efficiency</p>
-                    </div>
-                    <div class="feature-card" data-feature="prediction" title="Next Month Budget Prediction">
-                        <div class="feature-icon">🔮</div>
-                        <h4>Prediction</h4>
-                        <p>Predict future grocery budget</p>
-                    </div>
-                    <div class="feature-card" data-feature="explain" title="Recommendation Explanation Engine">
-                        <div class="feature-icon">💡</div>
-                        <h4>Explain</h4>
-                        <p>Explain why items are recommended</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section-card" id="preferencesSection">
+            <section class="section-card auth-required" id="personalize" style="display: none;">
                 <div class="section-head">
                     <div>
                         <p class="eyebrow">Personalize</p>
@@ -196,6 +203,37 @@
                             </label>
                         </div>
                     </div>
+                    <div class="field span-2">
+                        <span>Add Essential Items</span>
+                        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+                            <select id="essentialItemSelect" style="flex: 1; min-width: 200px; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text);">
+                                <option value="">Select an essential item</option>
+                                <option value="Rice">Rice</option>
+                                <option value="Milk">Milk</option>
+                                <option value="Bread">Bread</option>
+                                <option value="Apple">Apple</option>
+                                <option value="Banana">Banana</option>
+                                <option value="Potato">Potato</option>
+                                <option value="Tomato">Tomato</option>
+                                <option value="Onion">Onion</option>
+                                <option value="Mango">Mango</option>
+                                <option value="Orange">Orange</option>
+                                <option value="Detergent">Detergent</option>
+                                <option value="Shampoo">Shampoo</option>
+                                <option value="Chips">Chips</option>
+                                <option value="Biscuits">Biscuits</option>
+                                <option value="Cold Drink">Cold Drink</option>
+                                <option value="others">Others</option>
+                            </select>
+                            <input type="text" id="customEssentialItemInput" placeholder="Enter custom item name" style="display: none; flex: 1; min-width: 200px; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text);">
+                            <button type="button" id="addEssentialItemBtn" class="btn btn-secondary">Add to List</button>
+                        </div>
+                        <small class="micro">Select and add essential items you always need to purchase, or choose "Others" to enter a custom item.</small>
+                    </div>
+                    <div class="field span-2" id="essentialItemsListContainer" style="display: none;">
+                        <span>Your Essential Items</span>
+                        <div id="essentialItemsList" class="chip-row" style="margin-top: 0.5rem;"></div>
+                    </div>
                     <div class="actions span-2">
                         <button type="submit" class="btn btn-primary">Save & personalize</button>
                         <button type="button" class="btn btn-secondary" id="quickRecommend">Personalize + recommend</button>
@@ -203,7 +241,96 @@
                 </form>
             </section>
 
-            <section class="section-card" id="discovery">
+            <section class="section-card auth-required" id="featuresBar" style="display: none;">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">AI Features</p>
+                        <h3>Smart recommendation modes</h3>
+                        <p class="lede">Select an AI mode to optimize your grocery recommendations.</p>
+                    </div>
+                </div>
+                <div class="features-carousel" id="featuresCarousel">
+                    <div class="feature-card" data-feature="quantity" title="Smart Quantity Optimization">
+                        <div class="feature-icon">📊</div>
+                        <h4>Quantity</h4>
+                        <p>Suggest optimal quantities within budget</p>
+                    </div>
+                    <div class="feature-card" data-feature="seasonal" title="Seasonal Grocery Intelligence">
+                        <div class="feature-icon">🌱</div>
+                        <h4>Seasonal</h4>
+                        <p>Recommend seasonal & cheaper items</p>
+                    </div>
+                    <div class="feature-card" data-feature="household" title="Household-Aware Recommendations">
+                        <div class="feature-icon">👨‍👩‍👧‍👦</div>
+                        <h4>Household</h4>
+                        <p>Adjust groceries by family size/type</p>
+                    </div>
+                    <div class="feature-card" data-feature="health" title="Health-Aware Budget Optimization">
+                        <div class="feature-icon">💪</div>
+                        <h4>Health</h4>
+                        <p>Balance budget + nutrition</p>
+                    </div>
+                    <div class="feature-card" data-feature="substitute" title="Substitute Product Recommendation">
+                        <div class="feature-icon">🔄</div>
+                        <h4>Substitute</h4>
+                        <p>Suggest cheaper alternatives</p>
+                    </div>
+                     <div class="feature-card" data-feature="savings" title="Savings Score & Monthly Ranking">
+                        <div class="feature-icon">🏆</div>
+                        <h4>Savings Score</h4>
+                        <p>Rank users/months by efficiency</p>
+                    </div>
+                    <div class="feature-card" data-feature="prediction" title="Next Month Budget Prediction">
+                        <div class="feature-icon">🔮</div>
+                        <h4>Prediction</h4>
+                        <p>Predict future grocery budget</p>
+                    </div>
+                    <div class="feature-card" data-feature="explain" title="Recommendation Explanation Engine">
+                        <div class="feature-icon">💡</div>
+                        <h4>Explain</h4>
+                        <p>Explain why items are recommended</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="recommendations" class="section-card auth-required" style="display: none;">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Recommended</p>
+                        <h3>Products tailored to you</h3>
+                        <p class="lede">Tap any card to view savings details and rationale.</p>
+                    </div>
+                    <button class="btn btn-ghost" id="refreshProducts">Refresh data</button>
+                </div>
+                <div id="recommendationsGrid" class="products-grid"></div>
+            </section>
+
+            <section id="analytics" class="section-card auth-required is-hidden" style="display: none;">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Insights</p>
+                        <h3>Shopping analytics</h3>
+                        <p class="lede">Visualize category coverage, price vs discount, and top deals.</p>
+                    </div>
+                    <button id="generateChartsBtn" class="btn btn-primary">Generate analytics</button>
+                </div>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h4>Category distribution</h4>
+                        <div class="chart-frame"><img id="categoryChartImg" alt="Category distribution chart"></div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Price vs discount</h4>
+                        <div class="chart-frame"><img id="priceDiscountChartImg" alt="Price vs discount chart"></div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Top deals</h4>
+                        <div class="chart-frame"><img id="topDealsChartImg" alt="Top deals chart"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-card auth-required" id="search" style="display: none;">
                 <div class="section-head">
                     <div>
                         <p class="eyebrow">Discover</p>
@@ -250,41 +377,7 @@
                 <p>Loading products and deals...</p>
             </div>
 
-            <section id="recommendations" class="section-card">
-                <div class="section-head">
-                    <div>
-                        <p class="eyebrow">Recommended</p>
-                        <h3>Products tailored to you</h3>
-                        <p class="lede">Tap any card to view savings details and rationale.</p>
-                    </div>
-                    <button class="btn btn-ghost" id="refreshProducts">Refresh data</button>
-                </div>
-                <div id="recommendationsGrid" class="products-grid"></div>
-            </section>
-
-            <section id="analytics" class="section-card is-hidden">
-                <div class="section-head">
-                    <div>
-                        <p class="eyebrow">Insights</p>
-                        <h3>Shopping analytics</h3>
-                        <p class="lede">Visualize category coverage, price vs discount, and top deals.</p>
-                    </div>
-                    <button id="generateChartsBtn" class="btn btn-primary">Generate analytics</button>
-                </div>
-                <div class="analytics-grid">
-                    <div class="analytics-card">
-                        <h4>Category distribution</h4>
-                        <div class="chart-frame"><img id="categoryChartImg" alt="Category distribution chart"></div>
-                    </div>
-                    <div class="analytics-card">
-                        <h4>Price vs discount</h4>
-                        <div class="chart-frame"><img id="priceDiscountChartImg" alt="Price vs discount chart"></div>
-                    </div>
-                    <div class="analytics-card">
-                        <h4>Top deals</h4>
-                        <div class="chart-frame"><img id="topDealsChartImg" alt="Top deals chart"></div>
-                    </div>
-                </div>
+            <section id="analytics-standalone" style="display: none;">
             </section>
         </main>
 
