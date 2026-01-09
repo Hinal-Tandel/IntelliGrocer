@@ -9,7 +9,8 @@ export const state = {
         discount: '',
         sort: ''
     },
-    activeFeature: 'quantity'
+    activeFeature: 'quantity',
+    selectedQuantities: {} // Track selected quantities by product index
 };
 
 export function setProducts(products) {
@@ -40,7 +41,25 @@ export function setActiveFeature(feature) {
 export function getActiveFeature() {
     return state.activeFeature;
 }
+export function setProductQuantity(productIndex, quantity) {
+    const qty = Math.max(1, Math.min(99, parseInt(quantity) || 1));
+    state.selectedQuantities[productIndex] = qty;
+    
+    // Update the product in filteredProducts if it exists
+    if (state.filteredProducts[productIndex]) {
+        state.filteredProducts[productIndex].selectedQuantity = qty;
+    }
+    
+    return qty;
+}
 
+export function getProductQuantity(productIndex) {
+    return state.selectedQuantities[productIndex] || 1;
+}
+
+export function clearQuantities() {
+    state.selectedQuantities = {};
+}
 export function getMetrics() {
     const deals = state.products.length;
     const categories = state.categories.length;

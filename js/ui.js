@@ -32,8 +32,10 @@ export function renderProducts(products, gridId = 'recommendationsGrid') {
 function createProductCard(product, index) {
     const percent = extractDiscountPercent(product.discount);
     const discountClass = percent > 0 ? getDiscountClass(percent) : '';
+    const savedQuantity = product.selectedQuantity || 1;
+    
     return `
-        <article class="product-card" data-product-index="${index}">
+        <article class="product-card" data-product-index="${index}" data-product-id="${product.id || index}">
             <h4 class="product-name">${product.name}</h4>
             <span class="product-category">${product.category || 'General'}</span>
             <p class="product-quantity">${product.quantity || ''}</p>
@@ -42,6 +44,14 @@ function createProductCard(product, index) {
                 <span class="discounted-price">${formatCurrency(product.discounted_price || 0)}</span>
             </div>
             ${percent > 0 ? `<span class="discount-badge ${discountClass}">${product.discount}</span>` : ''}
+            <div class="quantity-selector" style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+                <button class="qty-btn qty-decrease" data-product-index="${index}" style="width: 32px; height: 32px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">−</button>
+                <input type="number" class="qty-input" data-product-index="${index}" value="${savedQuantity}" min="1" max="99" style="width: 50px; text-align: center; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600;">
+                <button class="qty-btn qty-increase" data-product-index="${index}" style="width: 32px; height: 32px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">+</button>
+            </div>
+            <div class="total-price" style="margin-top: 0.5rem; text-align: center; font-weight: 600; color: var(--secondary);">
+                Total: <span class="item-total" data-product-index="${index}">${formatCurrency((product.discounted_price || 0) * savedQuantity)}</span>
+            </div>
         </article>
     `;
 }

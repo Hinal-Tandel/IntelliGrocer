@@ -1,9 +1,9 @@
 import { fetchProducts, fetchRecommendations, fetchAnalytics } from './api.js';
-import { state, setProducts, setFilteredProducts, setCategories, setPreferences, setFilters, getMetrics, setActiveFeature, getActiveFeature } from './state.js';
+import { state, setProducts, setFilteredProducts, setCategories, setPreferences, setFilters, getMetrics, setActiveFeature, getActiveFeature, setProductQuantity, getProductQuantity } from './state.js';
 import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards, renderRecommendationSummary } from './ui.js';
 import { filterProducts } from './filters.js';
 import { savePreferences, loadPreferences, loadEssentialItems, addEssentialItem, removeEssentialItem } from './storage.js';
-import { scrollToAnchor } from './utils.js';
+import { scrollToAnchor, formatCurrency } from './utils.js';
 import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories } from './firebase.js';
 import { generateBudgetRecommendations } from './recommendation.js';
 
@@ -172,20 +172,12 @@ function bindEvents() {
     // Handle clicks on both recommendation and search grids
     const recommendationsGrid = document.getElementById('recommendationsGrid');
     recommendationsGrid?.addEventListener('click', (e) => {
-        const card = e.target.closest('[data-product-index]');
-        if (!card) return;
-        const index = Number(card.getAttribute('data-product-index'));
-        const product = state.filteredProducts[index];
-        if (product) openProductModal(product);
+        handleProductGridClick(e);
     });
     
     const searchGrid = document.getElementById('searchResultsGrid');
     searchGrid?.addEventListener('click', (e) => {
-        const card = e.target.closest('[data-product-index]');
-        if (!card) return;
-        const index = Number(card.getAttribute('data-product-index'));
-        const product = state.filteredProducts[index];
-        if (product) openProductModal(product);
+        handleProductGridClick(e);
     });
 
     document.getElementById('modalClose')?.addEventListener('click', closeProductModal);
@@ -203,6 +195,47 @@ function bindEvents() {
     // Essential items handlers
     document.getElementById('addEssentialItemBtn')?.addEventListener('click', handleAddEssentialItem);
     document.getElementById('essentialItemSelect')?.addEventListener('change', handleEssentialItemSelectChange);
+}
+
+function handleProductGridClick(e) {
+    const qtyDecrease = e.target.closest('.qty-decrease');
+    const qtyIncrease = e.target.closest('.qty-increase');
+    const qtyInput = e.target.closest('.qty-input');
+    const card = e.target.closest('[data-product-index]');
+    
+    if (qtyDecrease || qtyIncrease) {
+        e.stopPropagation();
+        const index = Number((qtyDecrease || qtyIncrease).getAttribute('data-product-index'));
+        const currentQty = getProductQuantity(index);
+        const newQty = qtyDecrease ? currentQty - 1 : currentQty + 1;
+        updateProductQuantity(index, newQty);
+    } else if (qtyInput) {
+        e.stopPropagation();
+        qtyInput.addEventListener('change', (evt) => {
+            const index = Number(evt.target.getAttribute('data-product-index'));
+            updateProductQuantity(index, evt.target.value);
+        });
+    } else if (card && !e.target.closest('.quantity-selector')) {
+        const index = Number(card.getAttribute('data-product-index'));
+        const product = state.filteredProducts[index];
+        if (product) openProductModal(product);
+    }
+}
+
+function updateProductQuantity(index, quantity) {
+    const qty = setProductQuantity(index, quantity);
+    
+    // Update the input field
+    const input = document.querySelector(`.qty-input[data-product-index="${index}"]`);
+    if (input) input.value = qty;
+    
+    // Update the total price display
+    const totalSpan = document.querySelector(`.item-total[data-product-index="${index}"]`);
+    const product = state.filteredProducts[index];
+    if (totalSpan && product) {
+        const total = (product.discounted_price || 0) * qty;
+        totalSpan.textContent = formatCurrency(total);
+    }
 }
 
 async function loadProductsFlow() {
