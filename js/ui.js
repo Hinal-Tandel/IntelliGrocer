@@ -160,3 +160,67 @@ export function renderFeatureCards() {
         </div>
     `).join('');
 }
+export function renderRecommendationSummary(recommendationResult) {
+    const { totalCost, totalSavings, remainingBudget, metrics } = recommendationResult;
+    
+    // Create or update the summary section
+    let summarySection = document.getElementById('recommendationSummary');
+    
+    if (!summarySection) {
+        // Create the summary section if it doesn't exist
+        const recommendationsSection = document.getElementById('recommendations');
+        if (!recommendationsSection) return;
+        
+        summarySection = document.createElement('div');
+        summarySection.id = 'recommendationSummary';
+        summarySection.className = 'recommendation-summary';
+        
+        // Insert before the grid
+        const grid = document.getElementById('recommendationsGrid');
+        recommendationsSection.insertBefore(summarySection, grid);
+    }
+    
+    // Format currency
+    const formatCurrency = (amount) => `₹${amount.toFixed(2)}`;
+    
+    summarySection.innerHTML = `
+        <div class="summary-card">
+            <h4>📊 Budget Recommendation Summary</h4>
+            <div class="summary-grid">
+                <div class="summary-item highlight">
+                    <span class="summary-label">Total Products Selected</span>
+                    <span class="summary-value">${metrics.totalProducts}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Essential Items</span>
+                    <span class="summary-value">${metrics.essentialItems}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Non-Essential Items</span>
+                    <span class="summary-value">${metrics.nonEssentialItems}</span>
+                </div>
+                <div class="summary-item highlight">
+                    <span class="summary-label">Total Cost</span>
+                    <span class="summary-value">${formatCurrency(totalCost)}</span>
+                </div>
+                <div class="summary-item success">
+                    <span class="summary-label">Total Savings</span>
+                    <span class="summary-value">${formatCurrency(totalSavings)}</span>
+                </div>
+                <div class="summary-item ${remainingBudget > 0 ? 'success' : 'warning'}">
+                    <span class="summary-label">Remaining Budget</span>
+                    <span class="summary-value">${formatCurrency(remainingBudget)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Average Discount</span>
+                    <span class="summary-value">${metrics.averageDiscount.toFixed(1)}%</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Average Score</span>
+                    <span class="summary-value">${metrics.averageScore.toFixed(1)}/170</span>
+                </div>
+            </div>
+            <p class="micro">Products are ranked by: Essential items first → Higher recommendation score → Lower discounted price</p>
+        </div>
+    `;
+}
