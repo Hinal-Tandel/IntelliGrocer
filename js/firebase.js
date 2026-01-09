@@ -329,10 +329,8 @@ export async function getDeals() {
 
 export async function addDeal(dealData) {
   const dealsRef = collection(db, 'deals');
-  const uid = (auth && auth.currentUser) ? auth.currentUser.uid : null;
   const docRef = await addDoc(dealsRef, {
     ...dealData,
-    created_by: uid,
     created_at: Date.now(),
     updated_at: Date.now()
   });
