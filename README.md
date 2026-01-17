@@ -248,20 +248,6 @@ The system includes 8 intelligent recommendation modes that can be toggled witho
    - Provides detailed reasoning for each recommendation
    - Shows why specific items are suggested for your profile
 
-## Troubleshooting
-
-**Issue**: Server won't start
-- Make sure all dependencies are installed: `pip install -r requirements.txt`
-- Check if port 5000 is available
-
-**Issue**: Products not loading
-- Ensure `Grocery_data.csv` is in the same directory as `app.py`
-- Check browser console for errors
-- Verify the server is running
-
-**Issue**: Charts not generating
-- Make sure matplotlib backend is set to 'Agg' (non-GUI)
-- Check if all visualization libraries are installed
 
 ## Future Enhancements
 
@@ -275,10 +261,3 @@ The system includes 8 intelligent recommendation modes that can be toggled witho
 ## License
 
 This project is for educational purposes as part of a Capstone Project.
-
-
-
-
-
-
-

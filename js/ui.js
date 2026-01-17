@@ -46,12 +46,15 @@ function createProductCard(product, index) {
             ${percent > 0 ? `<span class="discount-badge ${discountClass}">${product.discount}</span>` : ''}
             <div class="quantity-selector" style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
                 <button class="qty-btn qty-decrease" data-product-index="${index}" style="width: 32px; height: 32px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">−</button>
-                <input type="number" class="qty-input" data-product-index="${index}" value="${savedQuantity}" min="1" max="99" style="width: 50px; text-align: center; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600;">
+                <input type="number" class="qty-input" data-product-index="${index}" value="${savedQuantity}" min="0" max="99" style="width: 50px; text-align: center; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-weight: 600;" onkeydown="event.preventDefault()">
                 <button class="qty-btn qty-increase" data-product-index="${index}" style="width: 32px; height: 32px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">+</button>
             </div>
             <div class="total-price" style="margin-top: 0.5rem; text-align: center; font-weight: 600; color: var(--secondary);">
                 Total: <span class="item-total" data-product-index="${index}">${formatCurrency((product.discounted_price || 0) * savedQuantity)}</span>
             </div>
+            <button class="btn-show-substitutes" data-product-name="${product.name}" style="margin-top: 0.75rem; width: 100%; padding: 0.5rem; background: var(--secondary); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <i class="fas fa-exchange-alt"></i> Substitutes
+            </button>
         </article>
     `;
 }

@@ -3,7 +3,7 @@ import { state, setProducts, setFilteredProducts, setCategories, setPreferences,
 import { renderCategoryFilter, renderProducts, showLoading, showToast, renderPreferencesChips, renderMetrics, renderAnalyticsCharts, toggleAnalytics, openProductModal, closeProductModal, setActiveNav, renderFeatureCards, renderRecommendationSummary, renderReports, showReportModal } from './ui.js';
 import { filterProducts } from './filters.js';
 import { savePreferences, loadPreferences, loadEssentialItems, addEssentialItem, removeEssentialItem } from './storage.js';
-import { scrollToAnchor, formatCurrency } from './utils.js';
+import { scrollToAnchor, formatCurrency, extractDiscountPercent } from './utils.js';
 import { auth, onAuthStateChanged, saveUserPreferences, saveRecommendations, searchProducts, searchByCategory, getCategories, saveRecommendationReport, getRecommendationReports, getRecommendationReport, deleteRecommendationReport, getUserProfile } from './firebase.js';
 import { generateBudgetRecommendations, generateRecommendationReport, generateHTMLReport } from './recommendation.js';
 
@@ -270,7 +270,15 @@ function handleProductGridClick(e) {
         e.stopPropagation();
         const index = Number((qtyDecrease || qtyIncrease).getAttribute('data-product-index'));
         const currentQty = getProductQuantity(index);
-        const newQty = qtyDecrease ? currentQty - 1 : currentQty + 1;
+        let newQty;
+        
+        if (qtyDecrease) {
+            newQty = Math.max(0, currentQty - 1);
+        } else {
+            // If current is 0, go to 1; otherwise increment by 1
+            newQty = currentQty === 0 ? 1 : currentQty + 1;
+        }
+        
         updateProductQuantity(index, newQty);
     } else if (qtyInput) {
         e.stopPropagation();
@@ -288,26 +296,36 @@ function handleProductGridClick(e) {
 function updateProductQuantity(index, quantity) {
     const qty = setProductQuantity(index, quantity);
     
+    // If quantity is 0, remove the product from filtered products
+    if (qty === 0) {
+        state.filteredProducts.splice(index, 1);
+        // Re-render products to update indices
+        renderProducts(state.filteredProducts);
+        showToast('Item removed from cart', 'info');
+    } else {
+        // Update the input field
+        const input = document.querySelector(`.qty-input[data-product-index="${index}"]`);
+        if (input) input.value = qty;
+        
+        // Update the total price display
+        const totalSpan = document.querySelector(`.item-total[data-product-index="${index}"]`);
+        const product = state.filteredProducts[index];
+        if (totalSpan && product) {
+            const total = (product.discounted_price || 0) * qty;
+            totalSpan.textContent = formatCurrency(total);
+        }
+    }
+    
     // Check if budget is exceeded
     if (state.preferences?.monthlyBudget) {
         const totalCost = calculateTotalCostWithQuantities();
         if (totalCost > state.preferences.monthlyBudget) {
             showToast(`Budget exceeded! Total: ${formatCurrency(totalCost)}, Budget: ${formatCurrency(state.preferences.monthlyBudget)}`, 'error');
         }
-        // Update budget summary display
+        // Update budget summary display everywhere
         updateBudgetSummary();
-    }
-    
-    // Update the input field
-    const input = document.querySelector(`.qty-input[data-product-index="${index}"]`);
-    if (input) input.value = qty;
-    
-    // Update the total price display
-    const totalSpan = document.querySelector(`.item-total[data-product-index="${index}"]`);
-    const product = state.filteredProducts[index];
-    if (totalSpan && product) {
-        const total = (product.discounted_price || 0) * qty;
-        totalSpan.textContent = formatCurrency(total);
+        updateItemsSummary(); // Update items summary if it exists
+        updateRecommendationSummary(); // Update recommendation summary dynamically
     }
 }
 
@@ -428,6 +446,64 @@ function updateItemsSummary() {
     
     const totalCostEl = document.getElementById('summaryTotalCost');
     if (totalCostEl) totalCostEl.textContent = formatCurrency(totalCost);
+}
+
+function updateRecommendationSummary() {
+    // Only update if there's a recommendation summary displayed
+    if (!document.getElementById('recommendationSummary')) return;
+    
+    // Calculate metrics based on current filtered products
+    const totalCost = calculateTotalCostWithQuantities();
+    const budget = state.preferences?.monthlyBudget || 0;
+    const remainingBudget = budget - totalCost;
+    
+    // Calculate total items selected (including quantities)
+    let totalItemsSelected = 0;
+    state.filteredProducts.forEach((product, index) => {
+        const qty = getProductQuantity(index) || 1;
+        totalItemsSelected += qty;
+    });
+    
+    // Calculate metrics
+    const essentialCount = state.filteredProducts.filter(p => p.is_essential).length;
+    const nonEssentialCount = state.filteredProducts.length - essentialCount;
+    const avgDiscount = state.filteredProducts.length > 0 
+        ? state.filteredProducts.reduce((sum, p) => {
+            const discountPercent = extractDiscountPercent(p.discount) || 0;
+            return sum + discountPercent;
+        }, 0) / state.filteredProducts.length 
+        : 0;
+    
+    // Calculate average score (1-170 scale)
+    const avgScore = state.filteredProducts.length > 0
+        ? (state.filteredProducts.length * 10) // Simple score based on count
+        : 0;
+    
+    // Calculate total savings
+    let totalSavings = 0;
+    state.filteredProducts.forEach((product, index) => {
+        const qty = getProductQuantity(index) || 1;
+        const originalPrice = parseFloat(product.original_price) || 0;
+        const discountedPrice = parseFloat(product.discounted_price) || 0;
+        totalSavings += (originalPrice - discountedPrice) * qty;
+    });
+    
+    // Create recommendation result object
+    const recommendationResult = {
+        totalCost,
+        totalSavings,
+        remainingBudget,
+        metrics: {
+            totalProducts: totalItemsSelected,
+            essentialItems: essentialCount,
+            nonEssentialItems: nonEssentialCount,
+            averageDiscount: avgDiscount,
+            averageScore: avgScore
+        }
+    };
+    
+    // Update the recommendation summary display
+    renderRecommendationSummary(recommendationResult);
 }
 
 function handleRemoveItem(index) {
@@ -1111,3 +1187,13 @@ async function handleDeleteReport(reportId) {
         showLoading(false);
     }
 }
+
+// Expose global functions for substitute recommender
+window.renderProducts = renderProducts;
+window.openProductModal = openProductModal;
+window.showToast = showToast;
+window.setProductQuantity = setProductQuantity;
+window.getProductQuantity = getProductQuantity;
+window.updateBudgetSummary = updateBudgetSummary;
+window.updateItemsSummary = updateItemsSummary;
+window.updateRecommendationSummary = updateRecommendationSummary;

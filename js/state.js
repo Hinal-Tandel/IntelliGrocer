@@ -49,7 +49,7 @@ export function getActiveFeature() {
     return state.activeFeature;
 }
 export function setProductQuantity(productIndex, quantity) {
-    const qty = Math.max(1, Math.min(99, parseInt(quantity) || 1));
+    const qty = Math.max(0, Math.min(99, parseInt(quantity) || 0));
     state.selectedQuantities[productIndex] = qty;
     
     // Update the product in filteredProducts if it exists

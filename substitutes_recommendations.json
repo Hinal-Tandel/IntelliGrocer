@@ -1,0 +1,512 @@
+{
+  "Basmati Rice": {
+    "category": "Grains",
+    "current_price": 520.0,
+    "original_price": 650.0,
+    "current_discount": 20.0,
+    "substitutes": [
+      {
+        "name": "Wheat Flour",
+        "category": "Grains",
+        "discounted_price": 250.0,
+        "original_price": 280.0,
+        "discount_pct": 10.714285714285714,
+        "savings": 30.0,
+        "price_difference": -270.0,
+        "knn_distance": 4.612985737586548
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Sunflower Oil": {
+    "category": "Cooking",
+    "current_price": 180.0,
+    "original_price": 210.0,
+    "current_discount": 14.0,
+    "substitutes": [
+      {
+        "name": "Rice Bran Oil",
+        "category": "Cooking",
+        "discounted_price": 165.0,
+        "original_price": 190.0,
+        "discount_pct": 13.157894736842104,
+        "savings": 25.0,
+        "price_difference": -15.0,
+        "knn_distance": 0.4215890147722387
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Groundnut Oil": {
+    "category": "Cooking",
+    "current_price": 200.0,
+    "original_price": 230.0,
+    "current_discount": 13.0,
+    "substitutes": [
+      {
+        "name": "Rice Bran Oil",
+        "category": "Cooking",
+        "discounted_price": 165.0,
+        "original_price": 190.0,
+        "discount_pct": 13.157894736842104,
+        "savings": 25.0,
+        "price_difference": -35.0,
+        "knn_distance": 0.44454419768873005
+      },
+      {
+        "name": "Sunflower Oil",
+        "category": "Cooking",
+        "discounted_price": 180.0,
+        "original_price": 210.0,
+        "discount_pct": 14.285714285714285,
+        "savings": 30.0,
+        "price_difference": -20.0,
+        "knn_distance": 0.48576851377927704
+      }
+    ],
+    "count": 2,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Moong Dal": {
+    "category": "Pulses",
+    "current_price": 140.0,
+    "original_price": 160.0,
+    "current_discount": 12.0,
+    "substitutes": [
+      {
+        "name": "Chana Dal",
+        "category": "Pulses",
+        "discounted_price": 105.0,
+        "original_price": 120.0,
+        "discount_pct": 12.5,
+        "savings": 15.0,
+        "price_difference": -35.0,
+        "knn_distance": 0.44290077248915816
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Milk": {
+    "category": "Dairy",
+    "current_price": 55.0,
+    "original_price": 60.0,
+    "current_discount": 8.0,
+    "substitutes": [
+      {
+        "name": "Curd",
+        "category": "Dairy",
+        "discounted_price": 40.0,
+        "original_price": 45.0,
+        "discount_pct": 11.11111111111111,
+        "savings": 5.0,
+        "price_difference": -15.0,
+        "knn_distance": 0.9463905038965211
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Butter": {
+    "category": "Dairy",
+    "current_price": 100.0,
+    "original_price": 120.0,
+    "current_discount": 17.0,
+    "substitutes": [
+      {
+        "name": "Paneer",
+        "category": "Dairy",
+        "discounted_price": 95.0,
+        "original_price": 110.0,
+        "discount_pct": 13.636363636363635,
+        "savings": 15.0,
+        "price_difference": -5.0,
+        "knn_distance": 1.0134241726120141
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Cheese": {
+    "category": "Dairy",
+    "current_price": 130.0,
+    "original_price": 150.0,
+    "current_discount": 13.0,
+    "substitutes": [
+      {
+        "name": "Paneer",
+        "category": "Dairy",
+        "discounted_price": 95.0,
+        "original_price": 110.0,
+        "discount_pct": 13.636363636363635,
+        "savings": 15.0,
+        "price_difference": -35.0,
+        "knn_distance": 0.45430314431165286
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Cauliflower": {
+    "category": "Vegetables",
+    "current_price": 38.0,
+    "original_price": 45.0,
+    "current_discount": 16.0,
+    "substitutes": [
+      {
+        "name": "Cabbage",
+        "category": "Vegetables",
+        "discounted_price": 25.0,
+        "original_price": 30.0,
+        "discount_pct": 16.666666666666664,
+        "savings": 5.0,
+        "price_difference": -13.0,
+        "knn_distance": 0.40571207521304054
+      },
+      {
+        "name": "Tomato",
+        "category": "Vegetables",
+        "discounted_price": 25.0,
+        "original_price": 30.0,
+        "discount_pct": 16.666666666666664,
+        "savings": 5.0,
+        "price_difference": -13.0,
+        "knn_distance": 0.40571207521304054
+      },
+      {
+        "name": "Potato",
+        "category": "Vegetables",
+        "discounted_price": 30.0,
+        "original_price": 35.0,
+        "discount_pct": 14.285714285714285,
+        "savings": 5.0,
+        "price_difference": -8.0,
+        "knn_distance": 0.4357666588631741
+      }
+    ],
+    "count": 3,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Coffee": {
+    "category": "Beverages",
+    "current_price": 140.0,
+    "original_price": 160.0,
+    "current_discount": 13.0,
+    "substitutes": [
+      {
+        "name": "Green Tea",
+        "category": "Beverages",
+        "discounted_price": 115.0,
+        "original_price": 130.0,
+        "discount_pct": 11.538461538461538,
+        "savings": 15.0,
+        "price_difference": -25.0,
+        "knn_distance": 0.4506491344550817
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Chips": {
+    "category": "Snacks",
+    "current_price": 40.0,
+    "original_price": 50.0,
+    "current_discount": 20.0,
+    "substitutes": [
+      {
+        "name": "Biscuits",
+        "category": "Snacks",
+        "discounted_price": 30.0,
+        "original_price": 40.0,
+        "discount_pct": 25.0,
+        "savings": 10.0,
+        "price_difference": -10.0,
+        "knn_distance": 1.6736784151166257
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Cornflakes": {
+    "category": "Cereals",
+    "current_price": 135.0,
+    "original_price": 160.0,
+    "current_discount": 16.0,
+    "substitutes": [
+      {
+        "name": "Oats",
+        "category": "Cereals",
+        "discounted_price": 120.0,
+        "original_price": 140.0,
+        "discount_pct": 14.285714285714285,
+        "savings": 20.0,
+        "price_difference": -15.0,
+        "knn_distance": 0.4856537858861838
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Red Chilli Powder": {
+    "category": "Spices",
+    "current_price": 48.0,
+    "original_price": 55.0,
+    "current_discount": 13.0,
+    "substitutes": [
+      {
+        "name": "Turmeric Powder",
+        "category": "Spices",
+        "discounted_price": 35.0,
+        "original_price": 40.0,
+        "discount_pct": 12.5,
+        "savings": 5.0,
+        "price_difference": -13.0,
+        "knn_distance": 0.18115391675428383
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Coriander Powder": {
+    "category": "Spices",
+    "current_price": 40.0,
+    "original_price": 45.0,
+    "current_discount": 11.0,
+    "substitutes": [
+      {
+        "name": "Turmeric Powder",
+        "category": "Spices",
+        "discounted_price": 35.0,
+        "original_price": 40.0,
+        "discount_pct": 12.5,
+        "savings": 5.0,
+        "price_difference": -5.0,
+        "knn_distance": 0.46787780126720646
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Detergent Powder": {
+    "category": "Household",
+    "current_price": 115.0,
+    "original_price": 130.0,
+    "current_discount": 12.0,
+    "substitutes": [
+      {
+        "name": "Toothpaste",
+        "category": "Household",
+        "discounted_price": 85.0,
+        "original_price": 95.0,
+        "discount_pct": 10.526315789473683,
+        "savings": 10.0,
+        "price_difference": -30.0,
+        "knn_distance": 0.5081815571859308
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  },
+  "Bath Soap": {
+    "category": "Household",
+    "current_price": 100.0,
+    "original_price": 120.0,
+    "current_discount": 17.0,
+    "substitutes": [
+      {
+        "name": "Toothbrush",
+        "category": "Household",
+        "discounted_price": 50.0,
+        "original_price": 60.0,
+        "discount_pct": 16.666666666666664,
+        "savings": 10.0,
+        "price_difference": -50.0,
+        "knn_distance": 0.632715389270226
+      }
+    ],
+    "count": 1,
+    "metadata": {
+      "recommendation_method": "KNN (K-Nearest Neighbors)",
+      "k": 5,
+      "features": [
+        "discounted_price",
+        "discount_pct",
+        "is_essential"
+      ],
+      "filter_criteria": [
+        "same_category",
+        "cheaper_only"
+      ]
+    }
+  }
+}
