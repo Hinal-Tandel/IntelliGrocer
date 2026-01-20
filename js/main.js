@@ -754,10 +754,12 @@ async function navigateToSection(sectionId) {
             }
         }
         
-        // Special handling for recommendations - show features bar too
+        // Special handling for recommendations - show features bar and personalize section too
         if (targetSection === 'recommendations') {
             const featuresSection = document.getElementById('featuresBar');
+            const personalizeSection = document.getElementById('personalize');
             if (featuresSection) featuresSection.style.display = '';
+            if (personalizeSection) personalizeSection.style.display = '';
         }
         
         // Special handling for search - show all products initially

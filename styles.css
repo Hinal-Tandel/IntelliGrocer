@@ -1579,3 +1579,15 @@ body {
         font-size: 2rem;
     }
 }
+
+/* Hide number input spinner/arrow controls */
+input[type="number"].qty-input::-webkit-outer-spin-button,
+input[type="number"].qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"].qty-input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
